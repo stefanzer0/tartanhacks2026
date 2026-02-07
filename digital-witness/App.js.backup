@@ -1,0 +1,960 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Modal, Alert, Vibration, Image, ActivityIndicator, Linking } from 'react-native';
+import { Camera, CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
+import { Audio } from 'expo-av';
+import * as Speech from 'expo-speech';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StatusBar } from 'expo-status-bar';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+
+// Constants
+const STORAGE_KEY_USER = '@user_profile';
+const PIN_CODE = '1234';
+const SUPABASE_URL = 'https://vglyohhcnhmjqqylpyss.supabase.co/functions/v1/ask-advisor';
+const SUPABASE_KEY = 'sb_publishable_YHyjdyxGkSgW16Jtnlqr6w_ANnHN2tf';
+
+const RIGHTS_MESSAGES = [
+  "YOU HAVE THE RIGHT TO REMAIN SILENT",
+  "ASK: 'AM I FREE TO GO?'",
+  "DO NOT CONSENT TO ANY SEARCHES",
+  "REQUEST A LAWYER IMMEDIATELY",
+  "YOU DO NOT HAVE TO SIGN ANYTHING",
+  "KEEP YOUR HANDS VISIBLE",
+];
+
+export default function App() {
+  const [currentScreen, setCurrentScreen] = useState('loading'); // loading, onboarding, dashboard, active, summary
+  const [userProfile, setUserProfile] = useState(null);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const [micPermission, requestMicPermission] = useMicrophonePermissions();
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [activeSessionId, setActiveSessionId] = useState(null);
+
+  // Load profile on start
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(STORAGE_KEY_USER);
+      if (jsonValue != null) {
+        setUserProfile(JSON.parse(jsonValue));
+        setCurrentScreen('dashboard');
+      } else {
+        setCurrentScreen('onboarding');
+      }
+    } catch (e) {
+      console.error(e);
+      setCurrentScreen('onboarding');
+    }
+  };
+
+  const saveProfile = async (profile) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY_USER, JSON.stringify(profile));
+      setUserProfile(profile);
+      setCurrentScreen('dashboard');
+    } catch (e) {
+      Alert.alert('Error', 'Failed to save profile');
+    }
+  };
+
+  // Screen Navigation
+  const startSession = async () => {
+    // 1. Check Camera
+    if (!cameraPermission || !cameraPermission.granted) {
+      const newCameraPermission = await requestCameraPermission();
+      if (!newCameraPermission.granted) {
+        Alert.alert("Permission Required", "Camera is needed for your safety.");
+        return;
+      }
+    }
+
+    // 2. Check Microphone (CRITICAL FIX)
+    if (!micPermission || !micPermission.granted) {
+      const newMicPermission = await requestMicPermission();
+      if (!newMicPermission.granted) {
+        Alert.alert(
+          "Microphone Needed",
+          "To speak with the AI Advisor, please allow microphone access.",
+          [{ text: "Open Settings", onPress: () => Linking.openSettings() }, { text: "Cancel" }]
+        );
+        return;
+      }
+    }
+
+    setActiveSessionId(Date.now().toString());
+    setRecordingTime(0);
+    setCurrentScreen('active');
+  };
+
+  const endSession = () => {
+    setCurrentScreen('summary');
+  };
+
+  if (!cameraPermission || !micPermission) {
+    // Permissions are still loading
+    return <View style={styles.container} />;
+  }
+
+  return (
+    <View style={styles.container}>
+      <StatusBar style="light" />
+      {currentScreen === 'loading' && <ActivityIndicator size="large" color="#FF0000" />}
+      {currentScreen === 'onboarding' && <OnboardingScreen onSave={saveProfile} />}
+      {currentScreen === 'dashboard' && <DashboardScreen user={userProfile} onArm={startSession} />}
+      {currentScreen === 'active' && <ActiveSessionScreen onEnd={endSession} recordingTime={recordingTime} setRecordingTime={setRecordingTime} />}
+      {currentScreen === 'summary' && <SummaryScreen sessionDuration={recordingTime} onHome={() => setCurrentScreen('dashboard')} />}
+    </View>
+  );
+}
+
+// --- DASHBOARD SCREEN ---
+function DashboardScreen({ user, onArm }) {
+  const [serverStatus, setServerStatus] = useState("CHECKING...");
+
+  useEffect(() => {
+    checkServer();
+  }, []);
+
+  const checkServer = async () => {
+    console.log("checkServer: Checking status...");
+    try {
+      const response = await fetch(SUPABASE_URL, {
+        method: 'OPTIONS', // Simple ping
+        headers: { 'Authorization': `Bearer ${SUPABASE_KEY}` }
+      });
+      console.log("checkServer: Response status:", response.status);
+      if (response.ok) {
+        console.log("checkServer: ONLINE");
+        setServerStatus("ONLINE");
+      } else {
+        console.log("checkServer: OFFLINE (Response not OK)");
+        setServerStatus("OFFLINE");
+      }
+    } catch (e) {
+      console.log("checkServer: OFFLINE (Error)", e);
+      setServerStatus("OFFLINE");
+    }
+  };
+
+  return (
+    <View style={styles.screenContainer}>
+      <View style={styles.topBar}>
+        <Ionicons name="shield-checkmark" size={24} color={serverStatus === "ONLINE" ? "#00FF00" : "#FF0000"} />
+        <Text style={[styles.statusText, { color: serverStatus === "ONLINE" ? "#00FF00" : "#FF0000" }]}>
+          SYSTEM: {serverStatus}
+        </Text>
+      </View>
+
+      <View style={styles.centerContent}>
+        <TouchableOpacity style={styles.armButton} onPress={onArm}>
+          <View style={styles.armInner}>
+            <Text style={styles.armText}>ARM</Text>
+          </View>
+        </TouchableOpacity>
+        <Text style={styles.hintText}>TAP TO ACTIVATE PROTOCOL</Text>
+      </View>
+
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>User: {user?.name} | {user?.status}</Text>
+      </View>
+    </View>
+  );
+}
+
+// --- ACTIVE SESSION SCREEN ---
+function ActiveSessionScreen({ onEnd, recordingTime, setRecordingTime }) {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [pin, setPin] = useState('');
+  const [scrollingText, setScrollingText] = useState(RIGHTS_MESSAGES[0]);
+  const [aiStatus, setAiStatus] = useState("AI LISTENING...");
+  const [aiVisionText, setAiVisionText] = useState("Analyzing Scene...");
+  const [isTalking, setIsTalking] = useState(false);
+
+  // Timer
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRecordingTime(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Cycling Rights Messages
+  useEffect(() => {
+    let index = 0;
+    const interval = setInterval(() => {
+      index = (index + 1) % RIGHTS_MESSAGES.length;
+      setScrollingText(RIGHTS_MESSAGES[index]);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Simulated Vision Analysis Loop
+  useEffect(() => {
+    const visionInterval = setInterval(() => {
+      const scenarios = [
+        "OFFICER DETECTED",
+        "VEHICLE STOP",
+        "HIGH STRESS AUDIO",
+        "LIGHTING: POOR",
+        "MULTIPLE VOICES"
+      ];
+      const randomScenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+      setAiVisionText(`VISION: ${randomScenario}`);
+    }, 5000);
+    return () => clearInterval(visionInterval);
+  }, []);
+
+  // Push to Talk Handlers
+  // Push to Talk Handlers
+  // Push to Talk Handlers
+  const handlePushToTalkIn = async () => {
+    if (isTalking || recordingRef.current) return;
+
+    // 1. Check Permissions First
+    if (!micPermission?.granted) {
+      if (micPermission?.canAskAgain) {
+        const response = await requestMicPermission();
+        if (!response.granted) {
+          Alert.alert("Permission Required", "Microphone access is needed to speak to the AI.");
+          return;
+        }
+      } else {
+        Alert.alert("Microphone Denied", "Please enable microphone access in your system settings.", [
+          { text: "Cancel" },
+          { text: "Open Settings", onPress: () => Linking.openSettings() }
+        ]);
+        return;
+      }
+    }
+
+    setIsTalking(true);
+    setAiStatus("LISTENING...");
+    Vibration.vibrate(50);
+
+    try {
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
+      const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
+      recordingRef.current = recording;
+    } catch (err) {
+      console.error('Failed to start recording', err);
+      setAiStatus("MIC ERROR");
+      setIsTalking(false);
+      Alert.alert("Recording Error", "Could not access microphone. Please check permissions.");
+    }
+  };
+
+  const recordingRef = useRef(null);
+
+  const handlePushToTalkOut = async () => {
+    if (!isTalking) return;
+
+    setIsTalking(false);
+    setAiStatus("ANALYZING...");
+
+    const recording = recordingRef.current;
+    recordingRef.current = null; // Detach ref immediately
+
+    if (!recording) return;
+
+    try {
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
+
+      // Prepare Upload
+      const formData = new FormData();
+      formData.append('audio', {
+        uri: uri,
+        type: 'audio/m4a',
+        name: 'voice.m4a',
+      });
+
+      // Call Supabase Edge Function
+      const response = await fetch(SUPABASE_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.advice) {
+        setAiStatus(`ADVICE: ${data.advice}`);
+        Speech.speak(data.advice, {
+          language: 'en',
+          pitch: 1.0,
+          rate: 1.1,
+        });
+      } else {
+        setAiStatus("SYSTEM ERROR");
+      }
+
+    } catch (error) {
+      console.error(error);
+      setAiStatus("CONNECTION ERROR");
+    }
+  };
+
+  const playDeescalation = () => {
+    const text = "I am recording this interaction for my safety. I am remaining silent.";
+    Speech.speak(text, { language: 'en', rate: 0.9, pitch: 1.0 });
+  };
+
+  const contactLawyer = () => {
+    Alert.alert("Contacting Legal Counsel", "Connecting you to the nearest available pro-bono attorney...", [
+      { text: "OK", onPress: () => console.log("Mock Lawyer Contacted") }
+    ]);
+    Vibration.vibrate([0, 500, 200, 500]);
+  };
+
+  const handlePinChange = (value) => {
+    setPin(value);
+    if (value.length === 4) {
+      if (value === PIN_CODE) {
+        setModalVisible(false);
+        onEnd();
+      } else {
+        Alert.alert("Incorrect PIN");
+        setPin('');
+      }
+    }
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Camera Background */}
+      <CameraView style={StyleSheet.absoluteFill} facing="back" />
+
+      {/* Overlay */}
+      <View style={styles.overlayContainer}>
+
+        {/* Top Status Bar */}
+        <View style={styles.activeTopBar}>
+          <View style={styles.recIndicator}>
+            <View style={styles.redDot} />
+            <Text style={styles.recText}>REC</Text>
+          </View>
+          <Text style={styles.timerText}>{formatTime(recordingTime)}</Text>
+          <View style={styles.uploadIndicator}>
+            <Ionicons name="cloud-upload" size={16} color="#00FFFF" />
+            <Text style={styles.uploadText}> CLOUD</Text>
+          </View>
+        </View>
+
+        {/* AI HUD */}
+        <View style={styles.aiHud}>
+          <Text style={styles.visionText}>{aiVisionText}</Text>
+          <View style={styles.rightsBanner}>
+            <Text style={styles.rightsText}>{scrollingText}</Text>
+          </View>
+        </View>
+
+        {/* Center AI Status */}
+        <View style={styles.aiStatusContainer}>
+          <Text style={[styles.aiStatusText, isTalking && styles.aiStatusActive]}>{aiStatus}</Text>
+        </View>
+
+        {/* Bottom Controls */}
+        <View style={styles.activeFooter}>
+          <TouchableOpacity style={styles.deescalateButton} onPress={playDeescalation}>
+            <Ionicons name="megaphone" size={24} color="black" />
+            <Text style={styles.deescalateText}>PLAY MSG</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.talkButton, isTalking && styles.talkButtonActive]}
+            onPressIn={handlePushToTalkIn}
+            onPressOut={handlePushToTalkOut}
+            activeOpacity={0.8}
+          >
+            <Ionicons name={isTalking ? "mic" : "mic-outline"} size={32} color="white" />
+            <Text style={styles.talkButtonText}>{isTalking ? "LISTENING" : "HOLD TO ASK"}</Text>
+          </TouchableOpacity>
+
+          <View style={{ alignItems: 'center' }}>
+            <TouchableOpacity style={styles.stopButton} onPress={() => { setModalVisible(true); setPin(''); }}>
+              <View style={styles.stopInner} />
+              <Text style={styles.stopText}>STOP</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Lawyer Button - Moved to absolute bottom right for better visibility */}
+        <TouchableOpacity style={styles.lawyerButtonFloating} onPress={contactLawyer}>
+          <Ionicons name="briefcase" size={24} color="white" />
+          <Text style={styles.lawyerButtonText}>LAWYER</Text>
+        </TouchableOpacity>
+
+      </View>
+
+      {/* PIN Modal */}
+      <Modal visible={modalVisible} transparent={true} animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>ENTER SECURITY PIN</Text>
+            <TextInput
+              style={styles.pinInput}
+              value={pin}
+              onChangeText={handlePinChange}
+              keyboardType="numeric"
+              maxLength={4}
+              secureTextEntry
+              autoFocus
+            />
+            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+              <Text style={styles.cancelText}>CANCEL</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+// --- ONBOARDING SCREEN ---
+function OnboardingScreen({ onSave }) {
+  const [name, setName] = useState('');
+  const [status, setStatus] = useState('');
+  const [contact, setContact] = useState('');
+
+  const handleSave = () => {
+    if (!name || !status || !contact) {
+      Alert.alert('Missing Info', 'Please fill in all fields for your safety.');
+      return;
+    }
+    onSave({ name, status, contact });
+  };
+
+  return (
+    <View style={styles.screenContainer}>
+      <Text style={styles.headerTitle}>DIGITAL WITNESS</Text>
+      <Text style={styles.subTitle}>Setup Your Safety Profile</Text>
+
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>FULL NAME</Text>
+        <TextInput style={styles.input} placeholder="John Doe" placeholderTextColor="#666" value={name} onChangeText={setName} />
+      </View>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>LEGAL STATUS (e.g., Citizen, Visa)</Text>
+        <TextInput style={styles.input} placeholder="F-1 Visa" placeholderTextColor="#666" value={status} onChangeText={setStatus} />
+      </View>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>EMERGENCY CONTACT</Text>
+        <TextInput style={styles.input} placeholder="555-0123" keyboardType="phone-pad" placeholderTextColor="#666" value={contact} onChangeText={setContact} />
+      </View>
+
+      <TouchableOpacity style={styles.primaryButton} onPress={handleSave}>
+        <Text style={styles.buttonText}>SAVE PROFILE</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+
+// --- SUMMARY SCREEN ---
+function SummaryScreen({ sessionDuration, onHome }) {
+  const [loading, setLoading] = useState(false);
+  const [report, setReport] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const generateReport = async () => {
+    setLoading(true);
+    setModalVisible(true);
+    try {
+      // In a real app, we'd pass the session ID to fetch logs.
+      // Here we pass a mock log for the MVP demonstration
+      const body = {
+        session_id: "123",
+        logs: [
+          { role: "user", content: "They are asking for ID." },
+          { role: "ai", content: "Ask: Am I free to go?" },
+          { role: "user", content: "Am I free to go?" },
+          { role: "ai", content: "If no answer, remain silent." }
+        ]
+      };
+
+      const response = await fetch('https://vglyohhcnhmjqqylpyss.supabase.co/functions/v1/generate-report', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      const data = await response.json();
+      setReport(data.report);
+
+    } catch (e) {
+      setReport("Failed to generate report. secure connection lost.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.screenContainer}>
+      <Ionicons name="checkmark-circle" size={80} color="#00FF00" style={{ marginBottom: 20 }} />
+      <Text style={styles.headerTitle}>SESSION SECURED</Text>
+      <Text style={styles.subTitle}>Evidence Uploaded to Cloud Vault</Text>
+
+      <View style={styles.statsContainer}>
+        <Text style={styles.statText}>DURATION: {Math.floor(sessionDuration / 60)}m {sessionDuration % 60}s</Text>
+        <Text style={styles.statText}>DATE: {new Date().toLocaleDateString()}</Text>
+        <Text style={styles.statText}>STATUS: ENCRYPTED</Text>
+      </View>
+
+      <TouchableOpacity style={styles.reportButton} onPress={generateReport}>
+        <Text style={styles.reportButtonText}>GENERATE INCIDENT REPORT</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.primaryButton} onPress={onHome}>
+        <Text style={styles.buttonText}>RETURN TO DASHBOARD</Text>
+      </TouchableOpacity>
+
+      {/* Report Modal */}
+      <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet">
+        <View style={styles.modalOverlay}>
+          <View style={styles.reportModalContent}>
+            <Text style={styles.reportTitle}>INCIDENT REPORT</Text>
+            {loading ? (
+              <ActivityIndicator size="large" color="#00FF00" />
+            ) : (
+              <ScrollView style={styles.reportScroll}>
+                <Text style={styles.reportText}>{report}</Text>
+              </ScrollView>
+            )}
+            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+              <Text style={styles.closeButtonText}>CLOSE REPORT</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+// ... styles continue ...
+
+// --- STYLES ---
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  screenContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  // Typography
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#FFF',
+    marginBottom: 10,
+    letterSpacing: 1,
+    textAlign: 'center',
+  },
+  subTitle: {
+    fontSize: 18,
+    color: '#AAA',
+    marginBottom: 40,
+    textAlign: 'center',
+  },
+  label: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  // Inputs
+  inputGroup: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  input: {
+    backgroundColor: '#222',
+    color: '#FFF',
+    padding: 15,
+    borderRadius: 8,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#444',
+  },
+  // Buttons
+  primaryButton: {
+    backgroundColor: '#0066CC',
+    paddingVertical: 18,
+    paddingHorizontal: 40,
+    borderRadius: 12,
+    marginTop: 20,
+    width: '100%',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  // Dashboard Components
+  topBar: {
+    position: 'absolute',
+    top: 60,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusText: {
+    color: '#00FF00',
+    marginLeft: 10,
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  centerContent: {
+    alignItems: 'center',
+  },
+  armButton: {
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    backgroundColor: '#330000',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 4,
+    borderColor: '#FF0000',
+    marginBottom: 30,
+    shadowColor: "#FF0000",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  armInner: {
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: '#CC0000',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FF4444',
+  },
+  armText: {
+    color: '#FFF',
+    fontSize: 48,
+    fontWeight: '900',
+  },
+  hintText: {
+    color: '#666',
+    fontSize: 14,
+    letterSpacing: 2,
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 40,
+  },
+  footerText: {
+    color: '#444',
+    fontSize: 12,
+  },
+  // Active Session
+  overlayContainer: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingTop: 50,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+  },
+  activeTopBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 10,
+    borderRadius: 8,
+  },
+  recIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  redDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#FF0000',
+    marginRight: 6,
+  },
+  recText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+  },
+  timerText: {
+    color: '#FFF',
+    fontSize: 20,
+    fontVariant: ['tabular-nums'],
+  },
+  uploadIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  uploadText: {
+    color: '#00FFFF',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  aiHud: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  visionText: {
+    color: '#00FF00',
+    fontSize: 12,
+    marginBottom: 8,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  rightsBanner: {
+    backgroundColor: 'rgba(255,0,0,0.8)',
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    width: '110%',
+    alignItems: 'center',
+  },
+  rightsText: {
+    color: '#FFF',
+    fontSize: 24,
+    fontWeight: '900',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+  },
+  aiStatusContainer: {
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  aiStatusText: {
+    color: '#00FFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    textShadowColor: 'black',
+    textShadowRadius: 5,
+  },
+  aiStatusActive: {
+    color: '#FF00FF',
+    fontSize: 22,
+  },
+  activeFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  deescalateButton: {
+    backgroundColor: '#FFFF00',
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  deescalateText: {
+    color: '#000',
+    fontSize: 9,
+    fontWeight: 'bold',
+    marginTop: 2,
+    textAlign: 'center'
+  },
+  talkButton: {
+    backgroundColor: 'rgba(0,0,255,0.6)',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#00FFFF',
+    marginBottom: 10,
+  },
+  talkButtonActive: {
+    backgroundColor: 'rgba(255,0,255,0.8)',
+    borderColor: '#FFF',
+    transform: [{ scale: 1.1 }],
+  },
+  talkButtonText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+    marginTop: 5,
+    textAlign: 'center',
+  },
+  stopButton: {
+    backgroundColor: '#330000',
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FF0000',
+  },
+  stopInner: {
+    width: 20,
+    height: 20,
+    backgroundColor: '#FF0000',
+    borderRadius: 2,
+    marginBottom: 2,
+  },
+  stopText: {
+    color: '#FF0000',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  lawyerButtonFloating: {
+    position: 'absolute',
+    top: 50, // Moved to TOP
+    left: 20, // Moved to LEFT to avoid Stop button overlap
+    backgroundColor: '#0066CC',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  lawyerButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    marginLeft: 5,
+    fontSize: 14,
+  },
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#222',
+    padding: 30,
+    borderRadius: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#444',
+  },
+  modalTitle: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  pinInput: {
+    backgroundColor: '#000',
+    color: '#FFF',
+    width: '100%',
+    fontSize: 32,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 20,
+    letterSpacing: 10,
+    borderWidth: 1,
+    borderColor: '#666',
+  },
+  cancelButton: {
+    padding: 10,
+  },
+  cancelText: {
+    color: '#AAA',
+    fontSize: 16,
+  },
+  // Summary
+  statsContainer: {
+    backgroundColor: '#111',
+    padding: 20,
+    borderRadius: 10,
+    width: '100%',
+    marginVertical: 20,
+  },
+  statText: {
+    color: '#FFF',
+    fontSize: 16,
+    marginBottom: 10,
+    fontFamily: 'monospace',
+  },
+  reportButton: {
+    backgroundColor: '#333',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#00FF00',
+    marginTop: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  reportButtonText: {
+    color: '#00FF00',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  reportModalContent: {
+    flex: 1,
+    backgroundColor: '#111',
+    padding: 20,
+    marginTop: 50,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  reportTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFF',
+    marginBottom: 20,
+    textAlign: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+    paddingBottom: 10,
+  },
+  reportScroll: {
+    flex: 1,
+  },
+  reportText: {
+    color: '#EEE',
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  closeButton: {
+    backgroundColor: '#CC0000',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  closeButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+  },
+});
