@@ -4,12 +4,61 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-3-flash-preview';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const EMBEDDING_MODEL = 'models/text-embedding-004';
+const EMBEDDING_URL = `https://generativelanguage.googleapis.com/v1beta/${EMBEDDING_MODEL}:embedContent`;
 
 if (!GEMINI_API_KEY) {
   throw new Error('GEMINI_API_KEY environment variable is required');
 }
 
-const SYSTEM_PROMPT = `You are a legal rights advisor. Listen to the user's audio and provide ONE brief tactical instruction (under 200 words). Examples: "Ask: Am I free to go?", "Say: I invoke my right to silence.", "Do not consent to searches."`;
+const BASE_SYSTEM_PROMPT = `You are a legal rights advisor. Provide ONE brief tactical instruction (under 200 words).`;
+
+// Helper: Generate embedding for search query
+async function generateQueryEmbedding(text: string): Promise<number[]> {
+  const response = await fetch(EMBEDDING_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': GEMINI_API_KEY,
+    },
+    body: JSON.stringify({
+      model: EMBEDDING_MODEL,
+      content: { parts: [{ text }] }
+    })
+  });
+
+  const data = await response.json();
+  return data.embedding?.values || [];
+}
+
+// Helper: Search knowledge base
+async function searchKnowledgeBase(queryText: string, limit: number = 3) {
+  try {
+    const embedding = await generateQueryEmbedding(queryText);
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Vector similarity search
+    const { data, error } = await supabase.rpc('match_knowledge_chunks', {
+      query_embedding: embedding,
+      match_threshold: 0.7,
+      match_count: limit
+    });
+
+    if (error) {
+      console.error("❌ Knowledge base search error:", error);
+      return [];
+    }
+
+    console.log(`📚 Found ${data?.length || 0} relevant knowledge chunks`);
+    return data || [];
+  } catch (error) {
+    console.error("❌ RAG search failed:", error);
+    return [];
+  }
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,7 +67,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // 1. Handle CORS (Preflight)
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -27,6 +75,7 @@ serve(async (req) => {
     console.log("📥 Received request");
     const formData = await req.formData();
     const audioFile = formData.get('audio');
+    const contextStr = formData.get('context');
 
     if (!audioFile) {
       console.error("❌ No audio file in request");
@@ -35,11 +84,21 @@ serve(async (req) => {
 
     console.log("🎤 Audio file received:", audioFile.name, audioFile.size, "bytes");
 
+    // Parse conversation context
+    let conversationContext = [];
+    if (contextStr) {
+      try {
+        conversationContext = JSON.parse(contextStr);
+        console.log("💬 Conversation context:", conversationContext.length, "exchanges");
+      } catch (e) {
+        console.warn("⚠️ Failed to parse context:", e);
+      }
+    }
+
     // Step 1: Upload audio to Gemini File API
     const audioBuffer = await audioFile.arrayBuffer();
     const audioBytes = new Uint8Array(audioBuffer);
 
-    // Initial resumable request
     console.log("📤 Starting file upload...");
     const uploadInitResponse = await fetch("https://generativelanguage.googleapis.com/upload/v1beta/files", {
       method: 'POST',
@@ -60,8 +119,7 @@ serve(async (req) => {
       throw new Error("Failed to get upload URL");
     }
 
-    console.log("� Uploading audio bytes...");
-    // Upload the actual bytes
+    console.log("📤 Uploading audio bytes...");
     const uploadResponse = await fetch(uploadUrl, {
       method: 'POST',
       headers: {
@@ -80,11 +138,38 @@ serve(async (req) => {
       throw new Error("Failed to upload audio file");
     }
 
-    // Step 2: Generate content using the file URI
+    // Step 2: RAG - Search knowledge base
+    // Use recent conversation to create search query
+    const recentContext = conversationContext.slice(-2);
+    const searchQuery = recentContext.map(c => c.transcript || c.advice).join(' ');
+
+    console.log("🔍 Searching knowledge base with query:", searchQuery.substring(0, 100));
+    const knowledgeChunks = await searchKnowledgeBase(searchQuery || "legal rights during police interaction");
+
+    // Build enhanced system prompt with RAG context
+    let systemPrompt = BASE_SYSTEM_PROMPT;
+    if (knowledgeChunks.length > 0) {
+      const contextText = knowledgeChunks.map((chunk, i) =>
+        `[Context ${i + 1}]: ${chunk.content}`
+      ).join('\n\n');
+
+      systemPrompt = `${BASE_SYSTEM_PROMPT}
+
+RELEVANT LEGAL INFORMATION:
+${contextText}
+
+Based on the above context and the audio, provide specific tactical advice.`;
+
+      console.log("✅ Enhanced prompt with", knowledgeChunks.length, "knowledge chunks");
+    } else {
+      console.log("ℹ️ No knowledge chunks found, using base prompt");
+    }
+
+    // Step 3: Generate content using the file URI
     const requestBody = {
       contents: [{
         parts: [
-          { text: SYSTEM_PROMPT },
+          { text: systemPrompt },
           { file_data: { mime_type: "audio/m4a", file_uri: fileInfo.file.uri } }
         ]
       }],
@@ -106,7 +191,6 @@ serve(async (req) => {
 
     const data = await response.json();
     console.log("📥 Gemini response status:", response.status);
-    console.log("📄 Full Gemini response:", JSON.stringify(data, null, 2));
 
     if (!response.ok) {
       console.error("Gemini Error:", data);
@@ -117,15 +201,19 @@ serve(async (req) => {
     console.log("💡 Extracted advice:", advice);
 
     return new Response(
-      JSON.stringify({ advice: advice.trim() }),
-      { headers: { "Content-Type": "application/json", 'Access-Control-Allow-Origin': '*' } }
+      JSON.stringify({
+        advice: advice.trim(),
+        rag_enabled: knowledgeChunks.length > 0,
+        knowledge_chunks_used: knowledgeChunks.length
+      }),
+      { headers: { "Content-Type": "application/json", ...corsHeaders } }
     )
 
   } catch (error) {
     console.error(error)
     return new Response(
       JSON.stringify({ error: error.message, advice: "System Offline. Remain Silent." }),
-      { status: 500, headers: { "Content-Type": "application/json", 'Access-Control-Allow-Origin': '*' } }
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     )
   }
 })
