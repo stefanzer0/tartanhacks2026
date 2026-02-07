@@ -25,6 +25,7 @@ const RIGHTS_MESSAGES = [
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState('loading'); // loading, onboarding, dashboard, active, summary
   const [userProfile, setUserProfile] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [micPermission, requestMicPermission] = useMicrophonePermissions();
   const [recordingTime, setRecordingTime] = useState(0);
@@ -54,10 +55,22 @@ export default function App() {
     try {
       await AsyncStorage.setItem(STORAGE_KEY_USER, JSON.stringify(profile));
       setUserProfile(profile);
+      setIsEditing(false);
       setCurrentScreen('dashboard');
     } catch (e) {
       Alert.alert('Error', 'Failed to save profile');
     }
+  };
+
+  const editProfile = () => {
+    Alert.alert(
+      'Edit Profile',
+      'Do you want to edit your safety profile?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Edit', onPress: () => { setIsEditing(true); setCurrentScreen('onboarding'); } }
+      ]
+    );
   };
 
   // Screen Navigation
@@ -102,8 +115,8 @@ export default function App() {
     <View style={styles.container}>
       <StatusBar style="light" />
       {currentScreen === 'loading' && <ActivityIndicator size="large" color="#FF0000" />}
-      {currentScreen === 'onboarding' && <OnboardingScreen onSave={saveProfile} />}
-      {currentScreen === 'dashboard' && <DashboardScreen user={userProfile} onArm={startSession} />}
+      {currentScreen === 'onboarding' && <OnboardingScreen onSave={saveProfile} initialData={isEditing ? userProfile : null} />}
+      {currentScreen === 'dashboard' && <DashboardScreen user={userProfile} onArm={startSession} onEditProfile={editProfile} />}
       {currentScreen === 'active' && <ActiveSessionScreen onEnd={endSession} recordingTime={recordingTime} setRecordingTime={setRecordingTime} />}
       {currentScreen === 'summary' && <SummaryScreen sessionDuration={recordingTime} onHome={() => setCurrentScreen('dashboard')} />}
     </View>
@@ -111,7 +124,7 @@ export default function App() {
 }
 
 // --- DASHBOARD SCREEN ---
-function DashboardScreen({ user, onArm }) {
+function DashboardScreen({ user, onArm, onEditProfile }) {
   const [serverStatus, setServerStatus] = useState("CHECKING...");
 
   useEffect(() => {
@@ -158,7 +171,11 @@ function DashboardScreen({ user, onArm }) {
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>User: {user?.name} | {user?.status}</Text>
+        <Text style={styles.footerText}>User: {user?.name} | {user?.citizenship}</Text>
+        <TouchableOpacity style={styles.editProfileButton} onPress={onEditProfile}>
+          <Ionicons name="create-outline" size={16} color="#00BFFF" />
+          <Text style={styles.editProfileText}>EDIT PROFILE</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -441,42 +458,233 @@ function ActiveSessionScreen({ onEnd, recordingTime, setRecordingTime }) {
   );
 }
 
-// --- ONBOARDING SCREEN ---
-function OnboardingScreen({ onSave }) {
-  const [name, setName] = useState('');
-  const [status, setStatus] = useState('');
-  const [contact, setContact] = useState('');
+// --- ONBOARDING SCREEN (MULTI-STEP) ---
+function OnboardingScreen({ onSave, initialData = null }) {
+  const [currentStep, setCurrentStep] = useState(1);
 
-  const handleSave = () => {
-    if (!name || !status || !contact) {
-      Alert.alert('Missing Info', 'Please fill in all fields for your safety.');
-      return;
+  // Step 1: Name & Phone
+  const [name, setName] = useState(initialData?.name || '');
+  const [phone, setPhone] = useState(initialData?.phone || '');
+
+  // Step 2: Demographics
+  const [gender, setGender] = useState(initialData?.gender || '');
+  const [dateOfBirth, setDateOfBirth] = useState(initialData?.dateOfBirth || '');
+  const [citizenship, setCitizenship] = useState(initialData?.citizenship || '');
+
+  // Step 3: Emergency Contact
+  const [emergencyName, setEmergencyName] = useState(initialData?.emergencyName || '');
+  const [emergencyPhone, setEmergencyPhone] = useState(initialData?.emergencyPhone || '');
+
+  // Step 4: Lawyer (Optional)
+  const [lawyerName, setLawyerName] = useState(initialData?.lawyerName || '');
+  const [lawyerPhone, setLawyerPhone] = useState(initialData?.lawyerPhone || '');
+
+  // Step 5: Permissions (placeholders)
+  const [permCamera, setPermCamera] = useState(initialData?.permCamera ?? true);
+  const [permMic, setPermMic] = useState(initialData?.permMic ?? true);
+  const [permPhotos, setPermPhotos] = useState(initialData?.permPhotos ?? true);
+  const [permCalls, setPermCalls] = useState(initialData?.permCalls ?? false);
+  const [permLocation, setPermLocation] = useState(initialData?.permLocation ?? true);
+
+  // Step 6: PIN
+  const [pin, setPin] = useState('');
+  const [pinConfirm, setPinConfirm] = useState('');
+
+  const validateStep = () => {
+    if (currentStep === 1) {
+      if (!name || !phone) {
+        Alert.alert('Missing Info', 'Please enter your name and phone number.');
+        return false;
+      }
+    } else if (currentStep === 2) {
+      if (!gender || !dateOfBirth || !citizenship) {
+        Alert.alert('Missing Info', 'Please complete all demographic fields.');
+        return false;
+      }
+    } else if (currentStep === 3) {
+      if (!emergencyName || !emergencyPhone) {
+        Alert.alert('Missing Info', 'Please enter emergency contact details.');
+        return false;
+      }
+    } else if (currentStep === 6) {
+      if (!pin || pin.length < 4) {
+        Alert.alert('Invalid PIN', 'PIN must be at least 4 digits.');
+        return false;
+      }
+      if (pin !== pinConfirm) {
+        Alert.alert('PIN Mismatch', 'PIN and confirmation do not match.');
+        return false;
+      }
     }
-    onSave({ name, status, contact });
+    return true;
+  };
+
+  const handleNext = () => {
+    if (!validateStep()) return;
+    if (currentStep < 6) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      // Final save
+      onSave({
+        name, phone, gender, dateOfBirth, citizenship,
+        emergencyName, emergencyPhone, lawyerName, lawyerPhone,
+        permCamera, permMic, permPhotos, permCalls, permLocation, pin
+      });
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
   return (
-    <View style={styles.screenContainer}>
+    <ScrollView style={styles.onboardingScrollView} contentContainerStyle={styles.scrollContent}>
       <Text style={styles.headerTitle}>DIGITAL WITNESS</Text>
       <Text style={styles.subTitle}>Setup Your Safety Profile</Text>
+      <Text style={styles.progressText}>Step {currentStep} of 6</Text>
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>FULL NAME</Text>
-        <TextInput style={styles.input} placeholder="John Doe" placeholderTextColor="#666" value={name} onChangeText={setName} />
-      </View>
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>LEGAL STATUS (e.g., Citizen, Visa)</Text>
-        <TextInput style={styles.input} placeholder="F-1 Visa" placeholderTextColor="#666" value={status} onChangeText={setStatus} />
-      </View>
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>EMERGENCY CONTACT</Text>
-        <TextInput style={styles.input} placeholder="555-0123" keyboardType="phone-pad" placeholderTextColor="#666" value={contact} onChangeText={setContact} />
-      </View>
+      {/* Step 1: Name & Phone */}
+      {currentStep === 1 && (
+        <>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>FULL NAME</Text>
+            <TextInput style={styles.input} placeholder="John Doe" placeholderTextColor="#666" value={name} onChangeText={setName} />
+          </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>PHONE NUMBER</Text>
+            <TextInput style={styles.input} placeholder="555-0123" keyboardType="phone-pad" placeholderTextColor="#666" value={phone} onChangeText={setPhone} />
+          </View>
+        </>
+      )}
 
-      <TouchableOpacity style={styles.primaryButton} onPress={handleSave}>
-        <Text style={styles.buttonText}>SAVE PROFILE</Text>
-      </TouchableOpacity>
-    </View>
+      {/* Step 2: Demographics */}
+      {currentStep === 2 && (
+        <>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>GENDER</Text>
+            <TextInput style={styles.input} placeholder="Male/Female/Other" placeholderTextColor="#666" value={gender} onChangeText={setGender} />
+          </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>DATE OF BIRTH</Text>
+            <TextInput style={styles.input} placeholder="MM/DD/YYYY" placeholderTextColor="#666" value={dateOfBirth} onChangeText={setDateOfBirth} />
+          </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>CITIZENSHIP STATUS</Text>
+            <TextInput style={styles.input} placeholder="Citizen, Permanent Resident, Visa" placeholderTextColor="#666" value={citizenship} onChangeText={setCitizenship} />
+          </View>
+        </>
+      )}
+
+      {/* Step 3: Emergency Contact */}
+      {currentStep === 3 && (
+        <>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>EMERGENCY CONTACT NAME</Text>
+            <TextInput style={styles.input} placeholder="Jane Doe" placeholderTextColor="#666" value={emergencyName} onChangeText={setEmergencyName} />
+          </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>EMERGENCY CONTACT PHONE</Text>
+            <TextInput style={styles.input} placeholder="555-9876" keyboardType="phone-pad" placeholderTextColor="#666" value={emergencyPhone} onChangeText={setEmergencyPhone} />
+          </View>
+        </>
+      )}
+
+      {/* Step 4: Lawyer Info (Optional) */}
+      {currentStep === 4 && (
+        <>
+          <Text style={styles.optionalLabel}>(Optional - Skip if you don't have a lawyer)</Text>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>LAWYER NAME</Text>
+            <TextInput style={styles.input} placeholder="Attorney Name" placeholderTextColor="#666" value={lawyerName} onChangeText={setLawyerName} />
+          </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>LAWYER PHONE</Text>
+            <TextInput style={styles.input} placeholder="555-5555" keyboardType="phone-pad" placeholderTextColor="#666" value={lawyerPhone} onChangeText={setLawyerPhone} />
+          </View>
+        </>
+      )}
+
+      {/* Step 5: Permissions */}
+      {currentStep === 5 && (
+        <>
+          <Text style={styles.permissionsTitle}>Grant Permissions:</Text>
+          <View style={styles.permissionRow}>
+            <Text style={styles.permissionLabel}>Camera</Text>
+            <TouchableOpacity style={permCamera ? styles.toggleActive : styles.toggleInactive} onPress={() => setPermCamera(!permCamera)}>
+              <Text style={styles.toggleText}>{permCamera ? 'ON' : 'OFF'}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.permissionRow}>
+            <Text style={styles.permissionLabel}>Microphone</Text>
+            <TouchableOpacity style={permMic ? styles.toggleActive : styles.toggleInactive} onPress={() => setPermMic(!permMic)}>
+              <Text style={styles.toggleText}>{permMic ? 'ON' : 'OFF'}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.permissionRow}>
+            <Text style={styles.permissionLabel}>Photos</Text>
+            <TouchableOpacity style={permPhotos ? styles.toggleActive : styles.toggleInactive} onPress={() => setPermPhotos(!permPhotos)}>
+              <Text style={styles.toggleText}>{permPhotos ? 'ON' : 'OFF'}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.permissionRow}>
+            <Text style={styles.permissionLabel}>Calls</Text>
+            <TouchableOpacity style={permCalls ? styles.toggleActive : styles.toggleInactive} onPress={() => setPermCalls(!permCalls)}>
+              <Text style={styles.toggleText}>{permCalls ? 'ON' : 'OFF'}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.permissionRow}>
+            <Text style={styles.permissionLabel}>Location</Text>
+            <TouchableOpacity style={permLocation ? styles.toggleActive : styles.toggleInactive} onPress={() => setPermLocation(!permLocation)}>
+              <Text style={styles.toggleText}>{permLocation ? 'ON' : 'OFF'}</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+
+      {/* Step 6: PIN */}
+      {currentStep === 6 && (
+        <>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>CREATE SECURITY PIN (4-6 digits)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter PIN"
+              placeholderTextColor="#666"
+              value={pin}
+              onChangeText={setPin}
+              keyboardType="number-pad"
+              secureTextEntry
+              maxLength={6}
+            />
+          </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>CONFIRM PIN</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Re-enter PIN"
+              placeholderTextColor="#666"
+              value={pinConfirm}
+              onChangeText={setPinConfirm}
+              keyboardType="number-pad"
+              secureTextEntry
+              maxLength={6}
+            />
+          </View>
+        </>
+      )}
+
+      {/* Navigation Buttons */}
+      <View style={styles.navigationButtons}>
+        {currentStep > 1 && (
+          <TouchableOpacity style={styles.secondaryButton} onPress={handlePrevious}>
+            <Text style={styles.secondaryButtonText}>PREVIOUS</Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity style={styles.primaryButton} onPress={handleNext}>
+          <Text style={styles.buttonText}>{currentStep === 6 ? 'SAVE PROFILE' : 'NEXT'}</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
 
@@ -546,6 +754,14 @@ function SummaryScreen({ sessionDuration, onHome }) {
 
       <TouchableOpacity style={styles.reportButton} onPress={generateReport}>
         <Text style={styles.reportButtonText}>GENERATE INCIDENT REPORT</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.historyButton}
+        onPress={() => Alert.alert("Session History", "Last Event:\nICE Investigation\nDuration: 0:29\nLocation: Pittsburgh, PA\nDate: " + new Date().toLocaleDateString())}
+      >
+        <Ionicons name="time-outline" size={20} color="#FFF" />
+        <Text style={styles.historyButtonText}>VIEW HISTORY</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.primaryButton} onPress={onHome}>
@@ -986,5 +1202,128 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: '#FFF',
     fontWeight: 'bold',
+  },
+  // Onboarding Multi-Step Styles
+  onboardingScrollView: {
+    flex: 1,
+    backgroundColor: '#000',
+    width: '100%',
+  },
+  scrollContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+    width: '100%',
+  },
+  progressText: {
+    color: '#00BFFF',
+    fontSize: 14,
+    marginBottom: 30,
+    fontWeight: 'bold',
+  },
+  optionalLabel: {
+    color: '#888',
+    fontSize: 13,
+    marginBottom: 20,
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
+  navigationButtons: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    gap: 10,
+  },
+  secondaryButton: {
+    backgroundColor: '#333',
+    paddingVertical: 18,
+    paddingHorizontal: 30,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#666',
+    flex: 1,
+    alignItems: 'center',
+  },
+  secondaryButtonText: {
+    color: '#AAA',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  // Permissions Styles
+  permissionsTitle: {
+    color: '#FFF',
+    fontSize: 18,
+    marginBottom: 20,
+    fontWeight: 'bold',
+  },
+  permissionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 8,
+  },
+  permissionLabel: {
+    color: '#FFF',
+    fontSize: 16,
+  },
+  toggleActive: {
+    backgroundColor: '#00FF00',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+  },
+  toggleInactive: {
+    backgroundColor: '#444',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+  },
+  toggleText: {
+    color: '#000',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  // Edit Profile Button
+  editProfileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 8,
+    gap: 5,
+  },
+  editProfileText: {
+    color: '#00BFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  // History Button
+  historyButton: {
+    backgroundColor: '#444',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#888',
+    marginTop: 10,
+    width: '100%',
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  historyButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });

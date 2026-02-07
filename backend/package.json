@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "dotenv": "^17.2.4",
+    "form-data": "^4.0.5",
     "node-fetch": "^3.3.2"
   }
 }
