@@ -11,7 +11,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 const STORAGE_KEY_USER = '@user_profile';
 const PIN_CODE = '1234';
 const SUPABASE_URL = 'https://vglyohhcnhmjqqylpyss.supabase.co/functions/v1/ask-advisor';
-const SUPABASE_KEY = 'sb_publishable_YHyjdyxGkSgW16Jtnlqr6w_ANnHN2tf';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnbHlvaGhjbmhtanFxeWxweXNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MzIyNDEsImV4cCI6MjA4NjAwODI0MX0.wR2IPYX9IhpkzL0Y-dzYPoz8HdeFvWY7oQX6W-OwqII';
 
 const RIGHTS_MESSAGES = [
   "YOU HAVE THE RIGHT TO REMAIN SILENT",
