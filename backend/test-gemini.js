@@ -1,7 +1,19 @@
 import fetch from 'node-fetch';
+import dotenv from 'dotenv';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-const GEMINI_API_KEY = "AIzaSyAUzVqYm8yJJThykoM3U8gSGJvOpLAiMug";
-const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
+// Load environment variables from .env file in project root
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: resolve(__dirname, '../.env') });
+
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3-flash-preview';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+if (!GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is not set in .env file');
+}
 
 async function testGemini() {
     console.log("🧪 Testing Gemini API directly...\n");
