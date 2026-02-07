@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RightGuard</string>
+    <string name="safeguard_tile_label">Safeguard</string>
+</resources>

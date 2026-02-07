@@ -1,0 +1,1298 @@
+{
+  "states": {
+    "PA": {
+      "name": "Pennsylvania",
+      "recording_consent": "two-party",
+      "state_specific_notes": [
+        "Pennsylvania is a two-party consent state for audio recordings (18 Pa.C.S. Section 5703). Recording police in public is generally protected, but be aware of wiretapping laws for audio.",
+        "Pennsylvania has a 'stop and identify' culture but no statute requiring you to provide ID during a pedestrian stop unless you are driving.",
+        "Under PA law, police must have probable cause or a warrant to search your vehicle unless you consent.",
+        "Philadelphia has specific policies on police conduct through its Police Advisory Commission."
+      ],
+      "encounters": {
+        "TRAFFIC_STOP": {
+          "rights": [
+            {
+              "right": "Right to Remain Silent",
+              "description": "You are required to provide your license, registration, and insurance. Beyond that, you have the right to remain silent under the 5th Amendment. You may say: 'I am exercising my right to remain silent.'",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment, U.S. Constitution; Miranda v. Arizona, 384 U.S. 436 (1966)"
+            },
+            {
+              "right": "Right to Refuse Vehicle Search",
+              "description": "You do not have to consent to a search of your vehicle. Officers need probable cause or a warrant. Clearly state: 'I do not consent to a search.'",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment, U.S. Constitution; Schneckloth v. Bustamonte, 412 U.S. 218 (1973)"
+            },
+            {
+              "right": "Right to Record the Encounter",
+              "description": "You may record police during a traffic stop. However, PA is a two-party consent state for audio, so be aware. Visual recording in public is generally protected under the 1st Amendment.",
+              "applicable_to": ["ALL"],
+              "source": "Glik v. Cunniffe, 655 F.3d 78 (1st Cir. 2011); 18 Pa.C.S. Section 5703"
+            },
+            {
+              "right": "Right to Know the Reason for the Stop",
+              "description": "You have the right to ask why you were stopped. Officers must have reasonable suspicion of a traffic violation or crime.",
+              "applicable_to": ["ALL"],
+              "source": "Terry v. Ohio, 392 U.S. 1 (1968)"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "If you are arrested, you have the right to an attorney. If you cannot afford one, one will be appointed. Invoke this right clearly.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment, U.S. Constitution; Gideon v. Wainwright, 372 U.S. 335 (1963)"
+            }
+          ],
+          "de_escalation_tips": [
+            "Keep your hands on the steering wheel where the officer can see them.",
+            "Turn on your interior light if it is dark outside.",
+            "Inform the officer before reaching for your license or registration.",
+            "Do not argue about the reason for the stop -- contest it in court instead.",
+            "If you receive a citation, sign it. Signing is not an admission of guilt."
+          ]
+        },
+        "PEDESTRIAN_STOP": {
+          "rights": [
+            {
+              "right": "Right to Ask if You Are Being Detained",
+              "description": "You may ask: 'Am I being detained or am I free to go?' If you are not being detained, you may calmly walk away.",
+              "applicable_to": ["ALL"],
+              "source": "Terry v. Ohio, 392 U.S. 1 (1968); Florida v. Bostick, 501 U.S. 429 (1991)"
+            },
+            {
+              "right": "Right to Remain Silent",
+              "description": "You are not required to answer questions. You may state: 'I am exercising my right to remain silent.'",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to Refuse a Search",
+              "description": "You do not have to consent to a pat-down or search unless the officer has reasonable suspicion you are armed and dangerous.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment, U.S. Constitution; Terry v. Ohio, 392 U.S. 1 (1968)"
+            },
+            {
+              "right": "No Obligation to Show ID (Pedestrian)",
+              "description": "Pennsylvania does not have a stop-and-identify statute. You are generally not required to show ID during a pedestrian stop unless you are operating a vehicle.",
+              "applicable_to": ["ALL"],
+              "source": "Hiibel v. Sixth Judicial District, 542 U.S. 177 (2004) (PA has no such statute)"
+            },
+            {
+              "right": "Right to Record",
+              "description": "You have the right to record police activity in public spaces. Do not interfere with their duties while recording.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment, U.S. Constitution"
+            }
+          ],
+          "de_escalation_tips": [
+            "Stay calm and keep your hands visible.",
+            "Do not run or make sudden movements.",
+            "Politely ask if you are being detained.",
+            "If detained, invoke your right to remain silent.",
+            "Remember officer details (badge number, name, patrol car number) for later."
+          ]
+        },
+        "HOME_VISIT": {
+          "rights": [
+            {
+              "right": "Right to Refuse Entry Without a Warrant",
+              "description": "Police cannot enter your home without a valid warrant, your consent, or exigent circumstances. Ask to see the warrant before opening the door.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment, U.S. Constitution; Payton v. New York, 445 U.S. 573 (1980)"
+            },
+            {
+              "right": "Right to Verify the Warrant",
+              "description": "A valid search warrant must be signed by a judge, list your specific address, and describe what is to be searched. You may ask to read it.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to Remain Silent",
+              "description": "You do not have to answer questions at your door. You may speak through a closed door.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "You may request to have an attorney present before answering any questions or allowing a search.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to Observe the Search",
+              "description": "If officers have a valid warrant and enter your home, you have the right to observe the search and note what is taken.",
+              "applicable_to": ["ALL"],
+              "source": "Wilson v. Arkansas, 514 U.S. 927 (1995)"
+            }
+          ],
+          "de_escalation_tips": [
+            "Speak through a closed door if possible.",
+            "Ask to see a warrant before opening the door.",
+            "If you choose to speak, step outside and close the door behind you.",
+            "Do not physically block officers who have a valid warrant.",
+            "Document everything they take and ask for a receipt of seized items."
+          ]
+        },
+        "PROTEST": {
+          "rights": [
+            {
+              "right": "Right to Peaceful Assembly",
+              "description": "The 1st Amendment protects your right to peacefully assemble and protest in public spaces. Permits may be required for large gatherings.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment, U.S. Constitution; Cox v. Louisiana, 379 U.S. 536 (1965)"
+            },
+            {
+              "right": "Right to Record",
+              "description": "You may photograph and record police and public events in public spaces. Officers cannot order you to stop recording or seize your device without a warrant.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; Glik v. Cunniffe, 655 F.3d 78 (1st Cir. 2011)"
+            },
+            {
+              "right": "Right to a Dispersal Order",
+              "description": "Before arresting protesters, police must generally issue a clear dispersal order and give reasonable time to comply.",
+              "applicable_to": ["ALL"],
+              "source": "Jones v. Parmley, 465 F.3d 46 (2d Cir. 2006)"
+            },
+            {
+              "right": "Right to Remain Silent if Detained",
+              "description": "If detained or arrested during a protest, you have the right to remain silent and request an attorney.",
+              "applicable_to": ["ALL"],
+              "source": "5th and 6th Amendments, U.S. Constitution"
+            },
+            {
+              "right": "Right to Medical Attention",
+              "description": "If injured during a protest or while in custody, you have the right to receive medical attention.",
+              "applicable_to": ["ALL"],
+              "source": "8th Amendment, U.S. Constitution; Estelle v. Gamble, 429 U.S. 97 (1976)"
+            }
+          ],
+          "de_escalation_tips": [
+            "Stay with a group and avoid isolated areas.",
+            "Follow lawful dispersal orders to avoid arrest.",
+            "Keep your hands visible and avoid throwing objects.",
+            "Have a legal observer or buddy system in place.",
+            "Write an emergency legal contact number on your arm in permanent marker."
+          ]
+        },
+        "IMMIGRATION_CHECK": {
+          "rights": [
+            {
+              "right": "Right to Remain Silent About Immigration Status",
+              "description": "You do not have to answer questions about where you were born, your immigration status, or how you entered the US. This applies to everyone regardless of status.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to Refuse Consent to Search",
+              "description": "You do not have to consent to a search of yourself, your belongings, or your home. Clearly state that you do not consent.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "You have the right to speak with an attorney before answering questions or signing any documents. Do not sign voluntary departure forms without legal counsel.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to a Hearing Before an Immigration Judge",
+              "description": "In most cases, you have the right to appear before an immigration judge and present your case before being removed from the country.",
+              "applicable_to": ["PERMANENT_RESIDENT", "VISA_HOLDER", "UNDOCUMENTED"],
+              "source": "INA Section 240; Zadvydas v. Davis, 533 U.S. 678 (2001)"
+            },
+            {
+              "right": "Right to Contact Your Consulate",
+              "description": "Foreign nationals have the right to contact their country's consulate if detained. Law enforcement is required to inform you of this right.",
+              "applicable_to": ["PERMANENT_RESIDENT", "VISA_HOLDER", "UNDOCUMENTED"],
+              "source": "Vienna Convention on Consular Relations, Article 36"
+            }
+          ],
+          "de_escalation_tips": [
+            "Stay calm and do not run.",
+            "State clearly: 'I am exercising my right to remain silent.'",
+            "Do not provide false documents or information.",
+            "Do not sign any documents without speaking to an attorney.",
+            "Memorize the phone number of an immigration attorney or hotline."
+          ]
+        },
+        "GENERAL": {
+          "rights": [
+            {
+              "right": "Right to Remain Silent",
+              "description": "The 5th Amendment protects you from being compelled to be a witness against yourself. You may decline to answer questions from law enforcement.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment, U.S. Constitution; Miranda v. Arizona, 384 U.S. 436 (1966)"
+            },
+            {
+              "right": "Right Against Unreasonable Search and Seizure",
+              "description": "The 4th Amendment protects you from unreasonable searches. Officers need a warrant, probable cause, or your consent to search.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment, U.S. Constitution; Mapp v. Ohio, 367 U.S. 643 (1961)"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "You have the right to an attorney during custodial interrogation and at trial. If you cannot afford one, one will be appointed.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment; Gideon v. Wainwright, 372 U.S. 335 (1963)"
+            },
+            {
+              "right": "Right to Record Police",
+              "description": "You generally have the right to record police officers performing their duties in public. Do not interfere with their work.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to Know if You Are Being Detained",
+              "description": "You may ask an officer: 'Am I being detained or am I free to go?' This clarifies your legal status in the encounter.",
+              "applicable_to": ["ALL"],
+              "source": "Terry v. Ohio, 392 U.S. 1 (1968)"
+            }
+          ],
+          "de_escalation_tips": [
+            "Stay calm and breathe steadily.",
+            "Keep your hands visible at all times.",
+            "Be polite and do not argue.",
+            "Invoke your rights clearly and calmly.",
+            "Document the encounter afterward: write down times, badge numbers, and details."
+          ]
+        }
+      }
+    },
+    "CA": {
+      "name": "California",
+      "recording_consent": "two-party",
+      "state_specific_notes": [
+        "California is a two-party consent state for confidential communications (CA Penal Code Section 632). However, recording police in public is protected.",
+        "California has the TRUST Act (AB 4) and California Values Act (SB 54) which limit state/local law enforcement cooperation with federal immigration authorities.",
+        "Under Proposition 64, marijuana possession for adults 21+ is legal, but driving under the influence remains illegal.",
+        "California requires officers to provide their name and badge number upon request (CA Penal Code Section 830.10).",
+        "Los Angeles, San Francisco, and other cities have sanctuary city policies providing additional protections."
+      ],
+      "encounters": {
+        "TRAFFIC_STOP": {
+          "rights": [
+            {
+              "right": "Right to Remain Silent",
+              "description": "You must provide license, registration, and insurance. Beyond that, you may remain silent. Say: 'I am invoking my 5th Amendment right to remain silent.'",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment; CA Constitution Art. I, Section 15"
+            },
+            {
+              "right": "Right to Refuse Vehicle Search",
+              "description": "You do not have to consent to a vehicle search. California requires probable cause or a warrant. Say: 'I do not consent to a search.'",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; People v. Diaz, 51 Cal. 4th 84 (2011)"
+            },
+            {
+              "right": "Right to Record",
+              "description": "You may record your traffic stop. In California, recording police performing public duties is protected. Passengers may also record.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; CA Penal Code Section 69 (does not apply to recording)"
+            },
+            {
+              "right": "Right to Refuse Field Sobriety Tests (Pre-Arrest)",
+              "description": "You may refuse voluntary field sobriety tests before arrest without penalty. However, refusing a chemical test after arrest can result in license suspension under implied consent law.",
+              "applicable_to": ["ALL"],
+              "source": "CA Vehicle Code Section 23612"
+            },
+            {
+              "right": "Right to Officer Identification",
+              "description": "California officers must provide their name and badge number when requested.",
+              "applicable_to": ["ALL"],
+              "source": "CA Penal Code Section 830.10"
+            }
+          ],
+          "de_escalation_tips": [
+            "Pull over in a safe, well-lit area as soon as practical.",
+            "Turn off your engine and turn on interior lights at night.",
+            "Keep hands on the steering wheel until asked for documents.",
+            "Narrate your actions: 'I am reaching for my glove box now.'",
+            "If cited, sign the ticket -- it is not an admission of guilt."
+          ]
+        },
+        "PEDESTRIAN_STOP": {
+          "rights": [
+            {
+              "right": "Right to Ask if You Are Detained",
+              "description": "Ask: 'Am I being detained?' If not, you may calmly leave. Officers need reasonable suspicion to detain you.",
+              "applicable_to": ["ALL"],
+              "source": "Terry v. Ohio, 392 U.S. 1 (1968); In re Tony C., 21 Cal.3d 888 (1978)"
+            },
+            {
+              "right": "Right to Remain Silent",
+              "description": "You do not have to answer questions. California has no stop-and-identify statute for pedestrians.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to Refuse Search",
+              "description": "You may refuse a search of your person or belongings unless the officer has reasonable suspicion you are armed.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; People v. Lawler, 9 Cal.3d 156 (1973)"
+            },
+            {
+              "right": "Right to Record",
+              "description": "You may record any interaction with police in public. Officers cannot demand you stop recording.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Immigration Protections (CA Values Act)",
+              "description": "Under SB 54, California law enforcement cannot use resources to investigate, interrogate, detain, or arrest persons for immigration enforcement purposes.",
+              "applicable_to": ["ALL"],
+              "source": "California Values Act (SB 54, 2017)"
+            }
+          ],
+          "de_escalation_tips": [
+            "Stay calm and keep your hands visible.",
+            "Do not run or make sudden movements.",
+            "Politely ask: 'Officer, am I free to go?'",
+            "Do not physically resist even if the stop seems unlawful.",
+            "Note the officer's badge number and patrol car number."
+          ]
+        },
+        "HOME_VISIT": {
+          "rights": [
+            {
+              "right": "Right to Refuse Entry Without a Warrant",
+              "description": "Do not open the door. Ask: 'Do you have a warrant?' A judicial warrant (signed by a judge) is required. An ICE administrative warrant is NOT sufficient to enter.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; Payton v. New York, 445 U.S. 573 (1980)"
+            },
+            {
+              "right": "Right to Verify the Warrant",
+              "description": "Ask the officer to slide the warrant under the door. Verify it has the correct address, is signed by a judge, and is not expired.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to Remain Silent",
+              "description": "You do not have to answer any questions through the door or otherwise.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "California Values Act Protection",
+              "description": "Under SB 54, California law enforcement cannot assist federal immigration agents in enforcement actions at your home.",
+              "applicable_to": ["ALL"],
+              "source": "California Values Act (SB 54, 2017)"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "You have the right to speak with a lawyer before opening the door or answering questions.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment, U.S. Constitution"
+            }
+          ],
+          "de_escalation_tips": [
+            "Do not open the door. Communicate through the door or a window.",
+            "Ask: 'Do you have a judicial warrant signed by a judge?'",
+            "If they have a valid warrant, do not physically resist entry.",
+            "Stay calm and state that you wish to speak with an attorney.",
+            "Ask for a list of items seized and a copy of the warrant."
+          ]
+        },
+        "PROTEST": {
+          "rights": [
+            {
+              "right": "Right to Peaceful Assembly",
+              "description": "California strongly protects the right to protest. You may assemble on public sidewalks and parks without a permit for small groups.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; CA Constitution Art. I, Section 2 and 3"
+            },
+            {
+              "right": "Right to Record",
+              "description": "You may record police and protest activity in all public spaces. Officers cannot seize your device without a warrant.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; Riley v. California, 573 U.S. 373 (2014)"
+            },
+            {
+              "right": "Right Against Unlawful Arrest",
+              "description": "Officers must have probable cause to arrest you. Peaceful protest alone is not grounds for arrest.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; CA Penal Code Section 836"
+            },
+            {
+              "right": "Right to Dispersal Warning",
+              "description": "Before declaring an unlawful assembly, police must issue a clear order to disperse and provide a reasonable exit route.",
+              "applicable_to": ["ALL"],
+              "source": "CA Penal Code Section 409; CA Penal Code Section 726"
+            },
+            {
+              "right": "Right to Medical Attention",
+              "description": "If injured during a protest or in police custody, you have the right to receive medical attention.",
+              "applicable_to": ["ALL"],
+              "source": "8th Amendment; Estelle v. Gamble, 429 U.S. 97 (1976)"
+            }
+          ],
+          "de_escalation_tips": [
+            "Protest peacefully and do not block emergency vehicles.",
+            "Follow dispersal orders and move to the designated exit route.",
+            "Have a designated legal observer in your group.",
+            "Keep your hands visible and avoid confrontation.",
+            "Carry the phone number of a civil rights lawyer written on your body."
+          ]
+        },
+        "IMMIGRATION_CHECK": {
+          "rights": [
+            {
+              "right": "Right to Remain Silent",
+              "description": "You do not have to answer questions about your immigration status, country of origin, or how you entered the US.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "California Values Act Protection",
+              "description": "California state and local law enforcement cannot use resources to assist federal immigration enforcement. They cannot ask about your immigration status.",
+              "applicable_to": ["ALL"],
+              "source": "California Values Act (SB 54, 2017); TRUST Act (AB 4, 2013)"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "You have the right to an attorney. In California, detained immigrants may qualify for free legal representation through the California SAFE program.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment; CA SB 6 (2017)"
+            },
+            {
+              "right": "Right to Refuse to Sign Documents",
+              "description": "Do not sign any documents, especially voluntary departure forms, without first speaking to an attorney.",
+              "applicable_to": ["ALL"],
+              "source": "INA Section 240B"
+            },
+            {
+              "right": "Right to Contact Consulate",
+              "description": "If detained, you have the right to contact your country's consulate.",
+              "applicable_to": ["PERMANENT_RESIDENT", "VISA_HOLDER", "UNDOCUMENTED"],
+              "source": "Vienna Convention on Consular Relations, Article 36"
+            }
+          ],
+          "de_escalation_tips": [
+            "Stay calm and do not flee.",
+            "Say: 'I am exercising my right to remain silent.'",
+            "Do not carry false identification documents.",
+            "Do not sign any documents without an attorney present.",
+            "Know the number of a local immigration legal aid organization."
+          ]
+        },
+        "GENERAL": {
+          "rights": [
+            {
+              "right": "Right to Remain Silent",
+              "description": "You have the right to decline to answer questions from law enforcement under the 5th Amendment.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment; Miranda v. Arizona, 384 U.S. 436 (1966)"
+            },
+            {
+              "right": "Right Against Unreasonable Search",
+              "description": "Officers need a warrant, probable cause, or your consent to search you, your vehicle, or your home.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; Mapp v. Ohio, 367 U.S. 643 (1961)"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "You have the right to an attorney at any critical stage of criminal proceedings.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment; Gideon v. Wainwright, 372 U.S. 335 (1963)"
+            },
+            {
+              "right": "Right to Record Police",
+              "description": "You have the right to record police performing duties in public spaces.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to Officer Identification",
+              "description": "California law requires officers to identify themselves with name and badge number upon request.",
+              "applicable_to": ["ALL"],
+              "source": "CA Penal Code Section 830.10"
+            }
+          ],
+          "de_escalation_tips": [
+            "Remain calm and respectful.",
+            "Keep your hands where the officer can see them.",
+            "Invoke your rights clearly and politely.",
+            "Do not physically resist.",
+            "Write down everything after the encounter."
+          ]
+        }
+      }
+    },
+    "NY": {
+      "name": "New York",
+      "recording_consent": "one-party",
+      "state_specific_notes": [
+        "New York is a one-party consent state for recordings (NY Penal Law Section 250.00). You may record your own conversations with police.",
+        "New York City has additional civilian oversight through the Civilian Complaint Review Board (CCRB).",
+        "The Right to Know Act requires NYPD officers to identify themselves and explain the reason for certain law enforcement activities.",
+        "New York ended cash bail for most misdemeanors and non-violent felonies.",
+        "NYC has sanctuary city policies limiting cooperation with ICE."
+      ],
+      "encounters": {
+        "TRAFFIC_STOP": {
+          "rights": [
+            {
+              "right": "Right to Remain Silent",
+              "description": "Provide license, registration, and insurance when asked. You do not have to answer other questions.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment; NY CPL Section 140.50"
+            },
+            {
+              "right": "Right to Refuse Vehicle Search",
+              "description": "You may refuse a search of your vehicle. Officers need probable cause or a warrant.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; People v. Torres, 74 N.Y.2d 224 (1989)"
+            },
+            {
+              "right": "Right to Record",
+              "description": "New York is a one-party consent state. You may freely record your traffic stop, including audio.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; NY Penal Law Section 250.00"
+            },
+            {
+              "right": "Right to Know Why You Were Stopped",
+              "description": "Under the NYC Right to Know Act, officers must explain the reason for the stop.",
+              "applicable_to": ["ALL"],
+              "source": "NYC Right to Know Act (2018); Terry v. Ohio, 392 U.S. 1 (1968)"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "If arrested, you have the right to an attorney. New York has robust public defender services.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment; NY County Law Article 18-B"
+            }
+          ],
+          "de_escalation_tips": [
+            "Pull over safely and turn on your hazard lights.",
+            "Keep your hands on the steering wheel.",
+            "Inform the officer before making any movements.",
+            "Be polite; contest any disagreements in court.",
+            "If asked to exit the vehicle, comply calmly."
+          ]
+        },
+        "PEDESTRIAN_STOP": {
+          "rights": [
+            {
+              "right": "Right to Ask if You Are Being Detained",
+              "description": "Ask: 'Am I being detained?' Under NY law, police need reasonable suspicion to stop you. If not detained, you may leave.",
+              "applicable_to": ["ALL"],
+              "source": "Terry v. Ohio, 392 U.S. 1 (1968); People v. De Bour, 40 N.Y.2d 210 (1976)"
+            },
+            {
+              "right": "Right to Remain Silent",
+              "description": "New York does not have a stop-and-identify statute. You are not required to show ID during a pedestrian stop.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment; People v. De Bour, 40 N.Y.2d 210 (1976)"
+            },
+            {
+              "right": "Right to Refuse Search",
+              "description": "You may refuse a frisk unless the officer reasonably believes you are armed. State: 'I do not consent to a search.'",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; People v. Batista, 88 N.Y.2d 650 (1996)"
+            },
+            {
+              "right": "Right to Officer ID (NYC)",
+              "description": "In NYC, officers must provide a business card with their name, rank, shield number, and command under the Right to Know Act.",
+              "applicable_to": ["ALL"],
+              "source": "NYC Right to Know Act (2018)"
+            },
+            {
+              "right": "Right to Record",
+              "description": "You may record any police interaction in public. NY is a one-party consent state.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; NY Penal Law Section 250.00"
+            }
+          ],
+          "de_escalation_tips": [
+            "Stay calm and keep hands visible.",
+            "Politely ask: 'Am I free to go?'",
+            "Do not run or make sudden movements.",
+            "If frisked unlawfully, do not resist -- document it afterward.",
+            "Request the officer's business card (NYC)."
+          ]
+        },
+        "HOME_VISIT": {
+          "rights": [
+            {
+              "right": "Right to Refuse Entry Without a Warrant",
+              "description": "You do not have to open the door without a judicial warrant. An ICE administrative warrant does not authorize entry.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; Payton v. New York, 445 U.S. 573 (1980)"
+            },
+            {
+              "right": "Right to Verify Warrant",
+              "description": "Ask to see the warrant. It must be signed by a judge, list the correct address, and specify what is to be searched or who is to be arrested.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to Remain Silent",
+              "description": "You do not have to answer questions through your door or otherwise.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "Request an attorney before answering questions or allowing entry.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment; NY CPL Section 170.10"
+            },
+            {
+              "right": "NYC Sanctuary Protections",
+              "description": "NYC Executive Order 41 prohibits city employees (including NYPD) from inquiring about immigration status.",
+              "applicable_to": ["ALL"],
+              "source": "NYC Executive Order 41 (2003, reaffirmed)"
+            }
+          ],
+          "de_escalation_tips": [
+            "Do not open the door. Talk through the door.",
+            "Ask: 'Do you have a warrant signed by a judge?'",
+            "If they have a valid warrant, do not resist entry.",
+            "Call an attorney immediately.",
+            "Note the names and badge numbers of all officers."
+          ]
+        },
+        "PROTEST": {
+          "rights": [
+            {
+              "right": "Right to Peaceful Assembly",
+              "description": "New York strongly protects the right to protest. Sidewalks and parks are traditional public forums.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; NY Constitution Art. I, Section 9"
+            },
+            {
+              "right": "Right to Record",
+              "description": "You may record police and protest activity. NY is one-party consent for audio.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; NY Penal Law Section 250.00"
+            },
+            {
+              "right": "Right to Dispersal Warning",
+              "description": "Police must give a clear and audible dispersal order before arresting protesters for unlawful assembly.",
+              "applicable_to": ["ALL"],
+              "source": "NY Penal Law Section 240.10"
+            },
+            {
+              "right": "Right Against Excessive Force",
+              "description": "Officers may not use excessive force against protesters. The Eric Garner Anti-Chokehold Act bans chokeholds by NYPD.",
+              "applicable_to": ["ALL"],
+              "source": "NY Penal Law Section 121.13-a"
+            },
+            {
+              "right": "Right to Medical Attention",
+              "description": "If injured during a protest or in custody, you have the right to medical care.",
+              "applicable_to": ["ALL"],
+              "source": "8th Amendment; Estelle v. Gamble, 429 U.S. 97 (1976)"
+            }
+          ],
+          "de_escalation_tips": [
+            "Protest peacefully and follow dispersal orders.",
+            "Stay with a group and have a legal observer.",
+            "Do not block traffic or emergency vehicles without a permit.",
+            "Keep hands visible and avoid confrontation.",
+            "Know the NLG legal hotline number: (212) 679-6018."
+          ]
+        },
+        "IMMIGRATION_CHECK": {
+          "rights": [
+            {
+              "right": "Right to Remain Silent",
+              "description": "You do not have to answer questions about immigration status, national origin, or how you entered the US.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "NYC Sanctuary Protections",
+              "description": "NYPD will not ask about your immigration status or assist ICE in civil immigration enforcement under Executive Order 41.",
+              "applicable_to": ["ALL"],
+              "source": "NYC Executive Order 41; NYC Admin Code Section 14-154"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "NYC provides free legal representation to detained immigrants through the New York Immigrant Family Unity Project (NYIFUP).",
+              "applicable_to": ["ALL"],
+              "source": "NYC Council, NYIFUP (2013)"
+            },
+            {
+              "right": "Right to Refuse to Sign Documents",
+              "description": "Do not sign voluntary departure or any other immigration documents without consulting an attorney.",
+              "applicable_to": ["ALL"],
+              "source": "INA Section 240B"
+            },
+            {
+              "right": "Right to Contact Consulate",
+              "description": "If detained, you have the right to contact your country's consulate.",
+              "applicable_to": ["PERMANENT_RESIDENT", "VISA_HOLDER", "UNDOCUMENTED"],
+              "source": "Vienna Convention on Consular Relations, Article 36"
+            }
+          ],
+          "de_escalation_tips": [
+            "Stay calm and state: 'I wish to remain silent.'",
+            "Do not carry false documents.",
+            "Do not sign anything without a lawyer.",
+            "Memorize the ActionNYC hotline: (800) 354-0365.",
+            "If detained, ask to call your attorney immediately."
+          ]
+        },
+        "GENERAL": {
+          "rights": [
+            {
+              "right": "Right to Remain Silent",
+              "description": "You may decline to answer questions from law enforcement at any time.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment; Miranda v. Arizona, 384 U.S. 436 (1966)"
+            },
+            {
+              "right": "Right Against Unreasonable Search",
+              "description": "Officers need a warrant, probable cause, or your consent to conduct a search.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; Mapp v. Ohio, 367 U.S. 643 (1961)"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "You have the right to an attorney. In New York, the right to counsel attaches when formal proceedings begin or when an attorney enters the matter.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment; People v. Rogers, 48 N.Y.2d 167 (1979)"
+            },
+            {
+              "right": "Right to Record Police",
+              "description": "You may record police in public. NY is a one-party consent state.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; NY Penal Law Section 250.00"
+            },
+            {
+              "right": "Right to Officer Identification (NYC)",
+              "description": "NYPD officers must provide a business card with their name, rank, and badge number.",
+              "applicable_to": ["ALL"],
+              "source": "NYC Right to Know Act (2018)"
+            }
+          ],
+          "de_escalation_tips": [
+            "Stay calm and be respectful.",
+            "Keep your hands visible.",
+            "Clearly invoke your rights.",
+            "Do not physically resist.",
+            "Document everything afterward."
+          ]
+        }
+      }
+    },
+    "TX": {
+      "name": "Texas",
+      "recording_consent": "one-party",
+      "state_specific_notes": [
+        "Texas is a one-party consent state for recordings (TX Penal Code Section 16.02). You may record your interactions with police.",
+        "Texas has a 'Failure to Identify' law (TX Penal Code Section 38.02) that requires you to identify yourself when lawfully arrested or detained.",
+        "Texas has broad 'Castle Doctrine' protections for homeowners (TX Penal Code Section 9.31-9.32).",
+        "Texas does not have sanctuary city protections; SB 4 (2017) requires local cooperation with federal immigration enforcement.",
+        "Open carry of handguns without a permit is legal in Texas for adults 21+ under HB 1927 (2021)."
+      ],
+      "encounters": {
+        "TRAFFIC_STOP": {
+          "rights": [
+            {
+              "right": "Duty to Identify",
+              "description": "Texas law requires you to provide your name, date of birth, and address when lawfully detained. You must show your driver's license during a traffic stop.",
+              "applicable_to": ["ALL"],
+              "source": "TX Penal Code Section 38.02; TX Transportation Code Section 521.025"
+            },
+            {
+              "right": "Right to Remain Silent Beyond Identification",
+              "description": "After providing identification, you have the right to remain silent. You do not have to answer questions about where you are going or coming from.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment; TX Code of Criminal Procedure Art. 38.22"
+            },
+            {
+              "right": "Right to Refuse Vehicle Search",
+              "description": "You do not have to consent to a vehicle search. Without consent, officers need probable cause or a warrant.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; TX Code of Criminal Procedure Art. 18.01"
+            },
+            {
+              "right": "Right to Record",
+              "description": "Texas is a one-party consent state. You may freely record your traffic stop.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; TX Penal Code Section 16.02"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "If arrested, you have the right to an attorney. Texas law requires magistrate warnings within 48 hours of arrest.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment; TX Code of Criminal Procedure Art. 15.17"
+            }
+          ],
+          "de_escalation_tips": [
+            "Keep both hands on the steering wheel.",
+            "If you have a firearm, inform the officer immediately.",
+            "Do not exit the vehicle unless asked.",
+            "Provide ID when requested -- it is required by Texas law.",
+            "Do not argue; contest citations in court."
+          ]
+        },
+        "PEDESTRIAN_STOP": {
+          "rights": [
+            {
+              "right": "Right to Ask if Detained",
+              "description": "Ask: 'Am I being detained?' If not detained, you may leave. If detained, Texas law requires you to identify yourself.",
+              "applicable_to": ["ALL"],
+              "source": "TX Penal Code Section 38.02; Terry v. Ohio, 392 U.S. 1 (1968)"
+            },
+            {
+              "right": "Duty to Identify When Detained",
+              "description": "If lawfully detained, you must provide your name, date of birth, and address. Failure to do so is a criminal offense in Texas.",
+              "applicable_to": ["ALL"],
+              "source": "TX Penal Code Section 38.02"
+            },
+            {
+              "right": "Right to Remain Silent Beyond ID",
+              "description": "Beyond identifying information, you have the right to remain silent.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to Refuse Search",
+              "description": "You may refuse a search of your person unless the officer has reasonable suspicion you are armed.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; Terry v. Ohio, 392 U.S. 1 (1968)"
+            },
+            {
+              "right": "Right to Record",
+              "description": "You may record police interactions in public spaces.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; Turner v. Driver, 848 F.3d 678 (5th Cir. 2017)"
+            }
+          ],
+          "de_escalation_tips": [
+            "Stay calm and keep your hands visible.",
+            "Provide identification if lawfully detained -- Texas requires it.",
+            "Ask politely: 'Am I free to go?'",
+            "Do not physically resist.",
+            "Note the time, location, and officer details."
+          ]
+        },
+        "HOME_VISIT": {
+          "rights": [
+            {
+              "right": "Right to Refuse Entry Without a Warrant",
+              "description": "Texas has strong Castle Doctrine protections. You do not have to let police in without a warrant.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; TX Penal Code Section 9.31; Payton v. New York, 445 U.S. 573 (1980)"
+            },
+            {
+              "right": "Right to Verify the Warrant",
+              "description": "Ask to see the warrant. Verify it is signed by a judge and lists the correct address.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; TX Code of Criminal Procedure Art. 18.04"
+            },
+            {
+              "right": "Right to Remain Silent",
+              "description": "You do not have to answer questions at your door.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Castle Doctrine Protections",
+              "description": "Texas law provides strong protections for residents in their home. However, this does NOT authorize force against police with a valid warrant.",
+              "applicable_to": ["ALL"],
+              "source": "TX Penal Code Section 9.31, 9.32"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "You may request an attorney before answering any questions.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment, U.S. Constitution"
+            }
+          ],
+          "de_escalation_tips": [
+            "Do not open the door. Talk through the door.",
+            "Ask: 'Do you have a warrant signed by a judge?'",
+            "If they have a valid warrant, do not resist entry.",
+            "Do not threaten officers or brandish weapons.",
+            "Call an attorney as soon as possible."
+          ]
+        },
+        "PROTEST": {
+          "rights": [
+            {
+              "right": "Right to Peaceful Assembly",
+              "description": "You have the right to peacefully protest in public spaces in Texas.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; TX Constitution Art. I, Section 27"
+            },
+            {
+              "right": "Right to Record",
+              "description": "Texas courts have affirmed the right to record police. The 5th Circuit ruled this is protected by the 1st Amendment.",
+              "applicable_to": ["ALL"],
+              "source": "Turner v. Driver, 848 F.3d 678 (5th Cir. 2017)"
+            },
+            {
+              "right": "Duty to Identify if Detained",
+              "description": "If detained during a protest, you must provide identification under Texas law.",
+              "applicable_to": ["ALL"],
+              "source": "TX Penal Code Section 38.02"
+            },
+            {
+              "right": "Right to Remain Silent",
+              "description": "Beyond identifying yourself, you have the right to remain silent.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right Against Excessive Force",
+              "description": "Officers may not use excessive force against peaceful protesters.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; Graham v. Connor, 490 U.S. 386 (1989)"
+            }
+          ],
+          "de_escalation_tips": [
+            "Protest peacefully and do not block roadways.",
+            "Comply with dispersal orders.",
+            "If detained, provide identification as required by Texas law.",
+            "Keep your hands visible and avoid confrontations.",
+            "Have a legal contact number ready."
+          ]
+        },
+        "IMMIGRATION_CHECK": {
+          "rights": [
+            {
+              "right": "Right to Remain Silent About Immigration Status",
+              "description": "You are not required to answer questions about your immigration status, even in Texas.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Duty to Identify if Detained",
+              "description": "If lawfully detained, Texas law requires you to provide your name, date of birth, and address. This does not include immigration status.",
+              "applicable_to": ["ALL"],
+              "source": "TX Penal Code Section 38.02"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "You have the right to an attorney before answering questions or signing documents related to immigration.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to a Hearing",
+              "description": "You generally have the right to appear before an immigration judge before deportation.",
+              "applicable_to": ["PERMANENT_RESIDENT", "VISA_HOLDER", "UNDOCUMENTED"],
+              "source": "INA Section 240"
+            },
+            {
+              "right": "Right to Contact Consulate",
+              "description": "Foreign nationals have the right to contact their consulate if detained.",
+              "applicable_to": ["PERMANENT_RESIDENT", "VISA_HOLDER", "UNDOCUMENTED"],
+              "source": "Vienna Convention on Consular Relations, Article 36"
+            }
+          ],
+          "de_escalation_tips": [
+            "Stay calm and do not run.",
+            "State: 'I wish to remain silent.'",
+            "Provide identifying information if lawfully detained.",
+            "Do not provide false information -- it is a crime in Texas.",
+            "Do not sign anything without consulting an attorney."
+          ]
+        },
+        "GENERAL": {
+          "rights": [
+            {
+              "right": "Right to Remain Silent (After ID)",
+              "description": "Texas requires identification when lawfully detained. Beyond that, you may remain silent.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment; TX Penal Code Section 38.02"
+            },
+            {
+              "right": "Right Against Unreasonable Search",
+              "description": "Officers need a warrant, probable cause, or your consent to search.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; TX Code of Criminal Procedure Art. 18.01"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "You have the right to an attorney if arrested.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment; TX Code of Criminal Procedure Art. 1.05"
+            },
+            {
+              "right": "Right to Record Police",
+              "description": "You may record police in public. Texas courts have affirmed this right.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; Turner v. Driver, 848 F.3d 678 (5th Cir. 2017)"
+            },
+            {
+              "right": "Right to File a Complaint",
+              "description": "You may file a complaint against an officer with their department's internal affairs division.",
+              "applicable_to": ["ALL"],
+              "source": "TX Local Government Code Section 614.022"
+            }
+          ],
+          "de_escalation_tips": [
+            "Stay calm and be respectful.",
+            "Provide ID when lawfully required.",
+            "Keep your hands visible.",
+            "Invoke your rights clearly.",
+            "Document the encounter afterward."
+          ]
+        }
+      }
+    },
+    "FL": {
+      "name": "Florida",
+      "recording_consent": "two-party",
+      "state_specific_notes": [
+        "Florida is a two-party consent state for recording oral communications (FL Statute Section 934.03). However, recording police in public where there is no reasonable expectation of privacy is generally protected.",
+        "Florida has a 'Stop and Frisk' law (FL Statute Section 901.151) allowing officers to temporarily detain persons suspected of crime.",
+        "Florida has a 'Stand Your Ground' law (FL Statute Section 776.012-776.013) but this does NOT apply to encounters with law enforcement.",
+        "Florida requires you to provide identification only when lawfully detained and the officer has reasonable suspicion.",
+        "Florida has no statewide sanctuary city policy; SB 168 (2019) requires local cooperation with federal immigration authorities."
+      ],
+      "encounters": {
+        "TRAFFIC_STOP": {
+          "rights": [
+            {
+              "right": "Right to Remain Silent",
+              "description": "Provide your license, registration, and insurance. Beyond that, you have the right to remain silent.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment; FL Constitution Art. I, Section 9"
+            },
+            {
+              "right": "Right to Refuse Vehicle Search",
+              "description": "You do not have to consent to a vehicle search. State clearly: 'I do not consent to a search.'",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; FL Constitution Art. I, Section 12"
+            },
+            {
+              "right": "Right to Record",
+              "description": "You may visually record a traffic stop. Florida is a two-party consent state for audio of private conversations, but interactions with police in public are not considered private.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; FL Statute Section 934.03; Smith v. City of Cumming, 212 F.3d 1332 (11th Cir. 2000)"
+            },
+            {
+              "right": "Right to Know the Reason for the Stop",
+              "description": "You may ask why you were pulled over. Officers need at least reasonable suspicion of a violation.",
+              "applicable_to": ["ALL"],
+              "source": "Terry v. Ohio, 392 U.S. 1 (1968)"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "If arrested, invoke your right to an attorney. Florida has public defender services in every judicial circuit.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment; FL Constitution Art. I, Section 16"
+            }
+          ],
+          "de_escalation_tips": [
+            "Pull over safely and turn on your hazard lights.",
+            "Keep your hands on the steering wheel.",
+            "Turn on interior lights at night.",
+            "Tell the officer before reaching for anything.",
+            "Do not argue -- handle disputes in court."
+          ]
+        },
+        "PEDESTRIAN_STOP": {
+          "rights": [
+            {
+              "right": "Right to Ask if You Are Detained",
+              "description": "Ask: 'Am I being detained or am I free to go?' Officers need reasonable suspicion under Florida's Stop and Frisk law to detain you.",
+              "applicable_to": ["ALL"],
+              "source": "FL Statute Section 901.151; Terry v. Ohio, 392 U.S. 1 (1968)"
+            },
+            {
+              "right": "Right to Remain Silent",
+              "description": "Florida does not have a mandatory stop-and-identify statute for pedestrians. You may decline to answer questions.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment; FL Constitution Art. I, Section 9"
+            },
+            {
+              "right": "Right to Refuse Search",
+              "description": "You may refuse a search of your person. Officers may conduct a limited pat-down only if they reasonably suspect you are armed.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; FL Statute Section 901.151(3)"
+            },
+            {
+              "right": "Right to Record",
+              "description": "You may record police interactions in public.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; Smith v. City of Cumming, 212 F.3d 1332 (11th Cir. 2000)"
+            },
+            {
+              "right": "Right to Walk Away if Not Detained",
+              "description": "If you are not being detained, you have every right to calmly walk away.",
+              "applicable_to": ["ALL"],
+              "source": "Florida v. Bostick, 501 U.S. 429 (1991)"
+            }
+          ],
+          "de_escalation_tips": [
+            "Stay calm and keep your hands visible.",
+            "Politely ask: 'Am I free to go?'",
+            "If detained, remain composed and invoke your rights.",
+            "Do not run or physically resist.",
+            "Make mental notes of the officer's badge number and appearance."
+          ]
+        },
+        "HOME_VISIT": {
+          "rights": [
+            {
+              "right": "Right to Refuse Entry Without a Warrant",
+              "description": "You are not required to open your door or allow police into your home without a valid judicial warrant.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; FL Constitution Art. I, Section 12; Payton v. New York, 445 U.S. 573 (1980)"
+            },
+            {
+              "right": "Right to Verify the Warrant",
+              "description": "Ask to see the warrant through a window or have it slid under the door. Check that it is signed by a judge and has the correct address.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; FL Rule of Criminal Procedure 3.121"
+            },
+            {
+              "right": "Right to Remain Silent",
+              "description": "You do not have to speak with officers at your door.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "You may request an attorney before answering any questions.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to Observe the Search",
+              "description": "If officers enter with a valid warrant, you may observe the search and ask for an inventory of items seized.",
+              "applicable_to": ["ALL"],
+              "source": "FL Rule of Criminal Procedure 3.121"
+            }
+          ],
+          "de_escalation_tips": [
+            "Do not open the door. Speak through it.",
+            "Ask: 'Do you have a warrant signed by a judge?'",
+            "If they have a valid warrant, do not physically resist.",
+            "Call a lawyer immediately.",
+            "Ask for a receipt for any items taken."
+          ]
+        },
+        "PROTEST": {
+          "rights": [
+            {
+              "right": "Right to Peaceful Assembly",
+              "description": "You have the right to peacefully protest in public areas in Florida.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; FL Constitution Art. I, Section 5"
+            },
+            {
+              "right": "Right to Record",
+              "description": "You may record police and protest activity in public spaces.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; Smith v. City of Cumming, 212 F.3d 1332 (11th Cir. 2000)"
+            },
+            {
+              "right": "Right to Dispersal Warning",
+              "description": "Officers should give a clear dispersal order before making arrests for unlawful assembly.",
+              "applicable_to": ["ALL"],
+              "source": "FL Statute Section 870.02"
+            },
+            {
+              "right": "Right to Remain Silent if Detained",
+              "description": "If detained during a protest, you have the right to remain silent and request an attorney.",
+              "applicable_to": ["ALL"],
+              "source": "5th and 6th Amendments, U.S. Constitution"
+            },
+            {
+              "right": "Awareness of HB 1 (2021) Anti-Riot Law",
+              "description": "Florida's HB 1 increased penalties for protest-related offenses including blocking roads and damaging property. Peaceful protest remains protected.",
+              "applicable_to": ["ALL"],
+              "source": "FL HB 1 (2021); FL Statute Section 870.01-870.02"
+            }
+          ],
+          "de_escalation_tips": [
+            "Protest peacefully and stay on sidewalks.",
+            "Do not block roadways -- Florida has enhanced penalties for this.",
+            "Follow dispersal orders promptly.",
+            "Have a legal support number written down.",
+            "Do not engage in property destruction -- penalties are severe under HB 1."
+          ]
+        },
+        "IMMIGRATION_CHECK": {
+          "rights": [
+            {
+              "right": "Right to Remain Silent About Immigration Status",
+              "description": "You are not required to answer questions about where you were born or your immigration status.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "You have the right to consult with an attorney before answering immigration-related questions or signing documents.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment, U.S. Constitution"
+            },
+            {
+              "right": "Right to Refuse to Sign Documents",
+              "description": "Do not sign voluntary departure or other immigration documents without speaking to a lawyer.",
+              "applicable_to": ["ALL"],
+              "source": "INA Section 240B"
+            },
+            {
+              "right": "Right to a Hearing",
+              "description": "In most cases, you have the right to a hearing before an immigration judge.",
+              "applicable_to": ["PERMANENT_RESIDENT", "VISA_HOLDER", "UNDOCUMENTED"],
+              "source": "INA Section 240; Zadvydas v. Davis, 533 U.S. 678 (2001)"
+            },
+            {
+              "right": "Right to Contact Consulate",
+              "description": "Foreign nationals may contact their country's consulate if detained.",
+              "applicable_to": ["PERMANENT_RESIDENT", "VISA_HOLDER", "UNDOCUMENTED"],
+              "source": "Vienna Convention on Consular Relations, Article 36"
+            }
+          ],
+          "de_escalation_tips": [
+            "Stay calm and do not flee.",
+            "Say: 'I am exercising my right to remain silent.'",
+            "Do not carry false documents.",
+            "Do not sign anything without a lawyer.",
+            "Know the Florida Immigrant Coalition hotline number."
+          ]
+        },
+        "GENERAL": {
+          "rights": [
+            {
+              "right": "Right to Remain Silent",
+              "description": "You may decline to answer questions from law enforcement under the 5th Amendment and the Florida Constitution.",
+              "applicable_to": ["ALL"],
+              "source": "5th Amendment; FL Constitution Art. I, Section 9"
+            },
+            {
+              "right": "Right Against Unreasonable Search",
+              "description": "Florida's constitution provides search and seizure protections similar to the 4th Amendment.",
+              "applicable_to": ["ALL"],
+              "source": "4th Amendment; FL Constitution Art. I, Section 12"
+            },
+            {
+              "right": "Right to an Attorney",
+              "description": "You have the right to an attorney at all critical stages of criminal proceedings.",
+              "applicable_to": ["ALL"],
+              "source": "6th Amendment; FL Constitution Art. I, Section 16"
+            },
+            {
+              "right": "Right to Record Police",
+              "description": "You may record police performing public duties in public spaces.",
+              "applicable_to": ["ALL"],
+              "source": "1st Amendment; Smith v. City of Cumming, 212 F.3d 1332 (11th Cir. 2000)"
+            },
+            {
+              "right": "Right to File a Complaint",
+              "description": "You may file a complaint against an officer with their agency's internal affairs or the Florida Department of Law Enforcement.",
+              "applicable_to": ["ALL"],
+              "source": "FL Statute Section 112.532"
+            }
+          ],
+          "de_escalation_tips": [
+            "Stay calm and be respectful.",
+            "Keep your hands visible.",
+            "Invoke your rights calmly.",
+            "Do not physically resist.",
+            "Document the encounter afterward with notes and any recordings."
+          ]
+        }
+      }
+    }
+  }
+}

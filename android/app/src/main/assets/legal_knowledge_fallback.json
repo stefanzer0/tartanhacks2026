@@ -1,0 +1,106 @@
+{
+  "encounters": {
+    "TRAFFIC_STOP": {
+      "rights": [
+        "You have the right to remain silent (5th Amendment)",
+        "You must provide license, registration, and proof of insurance if driving",
+        "You have the right to refuse consent to a vehicle search (4th Amendment)",
+        "You have the right to record the encounter in public",
+        "You can ask 'Am I free to go?' to determine if you are being detained",
+        "You do not have to answer questions about where you are going or coming from"
+      ],
+      "de_escalation_tips": [
+        "Keep your hands visible on the steering wheel",
+        "Turn on interior lights if it is dark",
+        "Do not reach for documents until asked",
+        "Stay calm and speak politely",
+        "Do not physically resist even if you believe the stop is unlawful",
+        "Say 'I exercise my right to remain silent' clearly if you choose not to answer"
+      ]
+    },
+    "PEDESTRIAN_STOP": {
+      "rights": [
+        "You have the right to remain silent (5th Amendment)",
+        "You can ask 'Am I being detained or am I free to go?'",
+        "You do not have to consent to a search of your person or belongings",
+        "You have the right to record the encounter",
+        "In most states, you are not required to show ID unless you are being detained",
+        "You have the right to walk away if you are not being detained"
+      ],
+      "de_escalation_tips": [
+        "Stay calm and keep your hands visible",
+        "Do not run or make sudden movements",
+        "Politely ask if you are being detained",
+        "If you are free to go, calmly walk away",
+        "Do not physically resist a pat-down; verbally state you do not consent"
+      ]
+    },
+    "HOME_VISIT": {
+      "rights": [
+        "You do not have to open the door unless officers have a warrant",
+        "Ask to see the warrant through a window or slid under the door",
+        "A warrant must specify the correct address and be signed by a judge",
+        "You have the right to remain silent",
+        "You do not have to consent to a search of your home",
+        "You have the right to record inside your own home"
+      ],
+      "de_escalation_tips": [
+        "Speak through a closed door if possible",
+        "Ask to see identification and badge numbers",
+        "Ask 'Do you have a warrant?' before opening",
+        "If they have a valid warrant, do not physically resist entry",
+        "State clearly 'I do not consent to a search' if no warrant"
+      ]
+    },
+    "PROTEST": {
+      "rights": [
+        "You have the right to peacefully protest in public spaces (1st Amendment)",
+        "You have the right to photograph and record in public",
+        "You do not need a permit for small groups on public sidewalks",
+        "You have the right to remain silent if questioned",
+        "Police cannot confiscate or demand to see your photos/videos without a warrant",
+        "You have the right to legal representation if arrested"
+      ],
+      "de_escalation_tips": [
+        "Stay in public areas where you have the right to be",
+        "Keep your hands visible and avoid sudden movements",
+        "Follow lawful dispersal orders to avoid arrest",
+        "Document badge numbers and officer names",
+        "Have an emergency contact ready"
+      ]
+    },
+    "IMMIGRATION_CHECK": {
+      "rights": [
+        "You have the right to remain silent regardless of immigration status",
+        "You do not have to discuss your immigration status with local police",
+        "You have the right to speak to an attorney",
+        "ICE agents must have a judicial warrant to enter your home",
+        "You do not have to sign any documents without speaking to a lawyer",
+        "You have the right to make a phone call if detained"
+      ],
+      "de_escalation_tips": [
+        "Stay calm and do not run",
+        "Do not provide false documents",
+        "Say 'I wish to remain silent and speak to a lawyer'",
+        "Do not sign anything you do not understand",
+        "Carry your attorney's contact information"
+      ]
+    },
+    "GENERAL": {
+      "rights": [
+        "You have the right to remain silent (5th Amendment)",
+        "You have the right to refuse consent to searches (4th Amendment)",
+        "You have the right to an attorney (6th Amendment)",
+        "You have the right to record police in public",
+        "You have the right to know why you are being detained"
+      ],
+      "de_escalation_tips": [
+        "Stay calm and keep your hands visible",
+        "Be polite but firm about your rights",
+        "Do not physically resist",
+        "Remember badge numbers and patrol car numbers",
+        "Request a supervisor if you feel your rights are being violated"
+      ]
+    }
+  }
+}
