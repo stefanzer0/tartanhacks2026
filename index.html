@@ -3,24 +3,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello World</title>
+    <title>RightGuard — Your Rights. Your Safety. Your Control.</title>
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
+            background: #0a0a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
+
+        .hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 2rem;
+            background: radial-gradient(ellipse at center, #1a237e22 0%, transparent 70%);
+        }
+
+        .shield-icon {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 2rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .shield-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+        }
+
         h1 {
-            font-size: 3rem;
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #4CAF50, #2196F3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .tagline {
+            font-size: 1.3rem;
+            color: #9e9e9e;
+            margin-bottom: 3rem;
+            max-width: 600px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .feature-card {
+            background: #141428;
+            border: 1px solid #1e1e3a;
+            border-radius: 16px;
+            padding: 2rem;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: #2E7D32;
+        }
+
+        .feature-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.2rem;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card p {
+            font-size: 0.95rem;
+            color: #888;
+            line-height: 1.5;
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, #2E7D32, #1B5E20);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(46, 125, 50, 0.3);
+        }
+
+        .panic-button {
+            background: linear-gradient(135deg, #C62828, #B71C1C);
+            margin-left: 1rem;
+        }
+
+        .tech-stack {
+            text-align: center;
+            padding: 3rem 2rem;
+            border-top: 1px solid #1e1e3a;
+        }
+
+        .tech-stack h2 {
+            color: #fff;
+            margin-bottom: 1.5rem;
+        }
+
+        .tech-badges {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .badge {
+            padding: 0.5rem 1rem;
+            background: #1a1a3a;
+            border: 1px solid #2a2a5a;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+
+        .privacy-banner {
+            text-align: center;
+            padding: 2rem;
+            background: #0d1117;
+            border-top: 1px solid #1e1e3a;
+        }
+
+        .privacy-banner p {
+            color: #4CAF50;
+            font-weight: 600;
+        }
+
+        .privacy-banner small {
+            color: #666;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #444;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .tagline { font-size: 1.1rem; }
+            .features { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <h1>Hello, World!</h1>
+
+<section class="hero">
+    <div class="shield-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5L12 1z" fill="#2E7D32"/>
+            <path d="M10 15.5l-3.5-3.5 1.41-1.41L10 12.67l5.59-5.59L17 8.5l-7 7z" fill="white"/>
+        </svg>
+    </div>
+    <h1>RightGuard</h1>
+    <p class="tagline">Your Rights. Your Safety. Your Control. Real-time legal guidance, encrypted recording, and panic lockdown for law enforcement encounters.</p>
+    <div>
+        <a href="#features" class="cta-button">Learn More</a>
+    </div>
+</section>
+
+<section class="features" id="features">
+    <div class="feature-card">
+        <div class="icon">&#128249;</div>
+        <h3>Encrypted Recording</h3>
+        <p>One-tap video and audio recording with AES-256-GCM encryption. Everything stays on your device, protected by the Android Keystore.</p>
+    </div>
+    <div class="feature-card">
+        <div class="icon">&#9878;&#65039;</div>
+        <h3>AI Legal Guidance</h3>
+        <p>Real-time rights advice powered by Gemini AI. Know your rights, what to say, and what not to do during any type of encounter.</p>
+    </div>
+    <div class="feature-card">
+        <div class="icon">&#127908;</div>
+        <h3>Hands-Free Voice</h3>
+        <p>Speak naturally during encounters. AI responds through earbuds via text-to-speech. Full voice command support for eyes-free operation.</p>
+    </div>
+    <div class="feature-card">
+        <div class="icon">&#128680;</div>
+        <h3>Panic Mode</h3>
+        <p>Instant device lockdown: disables biometric unlock, requires PIN. Sends emergency alerts to trusted contacts with your GPS location.</p>
+    </div>
+    <div class="feature-card">
+        <div class="icon">&#128233;</div>
+        <h3>Trusted Contact Alerts</h3>
+        <p>Automatic SMS with GPS coordinates sent to your emergency contacts when safeguard or panic mode activates. Works on cellular without internet.</p>
+    </div>
+    <div class="feature-card">
+        <div class="icon">&#128196;</div>
+        <h3>Incident Reports</h3>
+        <p>Complete timeline of events, AI advice logs, voice transcriptions, and recordings. Export to PDF for legal documentation.</p>
+    </div>
+</section>
+
+<section class="tech-stack">
+    <h2>Built With</h2>
+    <div class="tech-badges">
+        <span class="badge">Kotlin</span>
+        <span class="badge">Jetpack Compose</span>
+        <span class="badge">Hilt</span>
+        <span class="badge">Room + SQLCipher</span>
+        <span class="badge">CameraX</span>
+        <span class="badge">Gemini AI</span>
+        <span class="badge">FastAPI</span>
+        <span class="badge">Android Keystore</span>
+        <span class="badge">Jetpack Glance</span>
+    </div>
+</section>
+
+<section class="privacy-banner">
+    <p>Zero Telemetry. Zero Analytics. Zero Server-Side Data.</p>
+    <small>Your data never leaves your device. The backend is stateless and self-hostable.</small>
+</section>
+
+<footer>
+    <p>RightGuard &mdash; TartanHacks 2026</p>
+</footer>
+
 </body>
 </html>
