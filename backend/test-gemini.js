@@ -25,7 +25,7 @@ async function testGemini() {
             }]
         }],
         generationConfig: {
-            maxOutputTokens: 100,
+            maxOutputTokens: 300,
             temperature: 0.4,
         }
     };

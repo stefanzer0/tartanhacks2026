@@ -9,7 +9,7 @@ if (!GEMINI_API_KEY) {
   throw new Error('GEMINI_API_KEY environment variable is required');
 }
 
-const SYSTEM_PROMPT = `You are a legal rights advisor. Listen to the user's audio and provide ONE brief tactical instruction (under 12 words). Examples: "Ask: Am I free to go?", "Say: I invoke my right to silence.", "Do not consent to searches."`;
+const SYSTEM_PROMPT = `You are a legal rights advisor. Listen to the user's audio and provide ONE brief tactical instruction (under 200 words). Examples: "Ask: Am I free to go?", "Say: I invoke my right to silence.", "Do not consent to searches."`;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -89,7 +89,7 @@ serve(async (req) => {
         ]
       }],
       generationConfig: {
-        maxOutputTokens: 50,
+        maxOutputTokens: 500,
         temperature: 0.3,
       }
     };
