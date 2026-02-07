@@ -93,6 +93,16 @@ export default function App() {
     setCurrentScreen('summary');
   };
 
+  const resetProfile = async () => {
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEY_USER);
+      setUserProfile(null);
+      setCurrentScreen('onboarding');
+    } catch (e) {
+      Alert.alert('Error', 'Failed to reset profile');
+    }
+  };
+
   if (!cameraPermission || !micPermission) {
     // Permissions are still loading
     return <View style={styles.container} />;
@@ -103,7 +113,7 @@ export default function App() {
       <StatusBar style="light" />
       {currentScreen === 'loading' && <ActivityIndicator size="large" color="#FF0000" />}
       {currentScreen === 'onboarding' && <OnboardingScreen onSave={saveProfile} />}
-      {currentScreen === 'dashboard' && <DashboardScreen user={userProfile} onArm={startSession} />}
+      {currentScreen === 'dashboard' && <DashboardScreen user={userProfile} onArm={startSession} onResetProfile={resetProfile} />}
       {currentScreen === 'active' && <ActiveSessionScreen onEnd={endSession} recordingTime={recordingTime} setRecordingTime={setRecordingTime} />}
       {currentScreen === 'summary' && <SummaryScreen sessionDuration={recordingTime} onHome={() => setCurrentScreen('dashboard')} />}
     </View>
@@ -111,7 +121,7 @@ export default function App() {
 }
 
 // --- DASHBOARD SCREEN ---
-function DashboardScreen({ user, onArm }) {
+function DashboardScreen({ user, onArm, onResetProfile }) {
   const [serverStatus, setServerStatus] = useState("CHECKING...");
 
   useEffect(() => {
@@ -159,6 +169,10 @@ function DashboardScreen({ user, onArm }) {
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>User: {user?.name} | {user?.status}</Text>
+        <TouchableOpacity style={styles.resetProfileButton} onPress={onResetProfile}>
+          <Ionicons name="person-circle-outline" size={16} color="#888" />
+          <Text style={styles.resetProfileText}>Edit Profile</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -169,9 +183,13 @@ function ActiveSessionScreen({ onEnd, recordingTime, setRecordingTime }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [pin, setPin] = useState('');
   const [scrollingText, setScrollingText] = useState(RIGHTS_MESSAGES[0]);
-  const [aiStatus, setAiStatus] = useState("AI LISTENING...");
+  const [aiStatus, setAiStatus] = useState("AI ADVISOR ACTIVE");
   const [aiVisionText, setAiVisionText] = useState("Analyzing Scene...");
-  const [isTalking, setIsTalking] = useState(false);
+  const [lawyerNotified, setLawyerNotified] = useState(false);
+  const [nextAdviceIn, setNextAdviceIn] = useState(15);
+  const [conversationHistory, setConversationHistory] = useState([]);
+  const recordingRef = useRef(null);
+  const [isRecording, setIsRecording] = useState(false);
 
   // Timer
   useEffect(() => {
@@ -207,129 +225,166 @@ function ActiveSessionScreen({ onEnd, recordingTime, setRecordingTime }) {
     return () => clearInterval(visionInterval);
   }, []);
 
-  // Push to Talk Handlers
-  const handlePushToTalkIn = async () => {
-    console.log("🎤 Pressed");
-    if (isTalking || recordingRef.current) return;
+  // Lawyer notification effect - show for 10 seconds
+  useEffect(() => {
+    const showTimer = setTimeout(() => {
+      setLawyerNotified(true);
+    }, 2000); // Show lawyer notification after 2 seconds
 
-    try {
-      const { status } = await Audio.requestPermissionsAsync();
-      console.log("Permission:", status);
-      if (status !== 'granted') {
-        Alert.alert("Mic Required", "Allow mic access", [
-          { text: "Cancel" },
-          { text: "Settings", onPress: () => Linking.openSettings() }
-        ]);
-        return;
-      }
-    } catch (e) {
-      console.error("Permission error:", e);
-      return;
-    }
+    const hideTimer = setTimeout(() => {
+      setLawyerNotified(false);
+    }, 12000); // Hide after 10 seconds (2s + 10s = 12s total)
 
-    setIsTalking(true);
-    setAiStatus("LISTENING...");
-    Vibration.vibrate(50);
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+    };
+  }, []);
 
-    try {
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
-      const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-      recordingRef.current = recording;
-      console.log("Recording started");
-    } catch (err) {
-      console.error(err);
-      setAiStatus("MIC ERROR");
-      setIsTalking(false);
-      Alert.alert("Error", err.message);
-    }
-  };
-
-  const recordingRef = useRef(null);
-
-  const handlePushToTalkOut = async () => {
-    console.log("🎤 Button Released");
-    if (!isTalking) {
-      console.log("⚠️ Not talking, ignoring");
-      return;
-    }
-
-    setIsTalking(false);
-    setAiStatus("ANALYZING...");
-
-    const recording = recordingRef.current;
-    recordingRef.current = null;
-
-    if (!recording) {
-      console.log("⚠️ No recording ref");
-      return;
-    }
-
-    try {
-      console.log("⏹️ Stopping recording...");
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
-      console.log("📁 URI:", uri);
-
-      const formData = new FormData();
-      formData.append('audio', {
-        uri: uri,
-        type: 'audio/m4a',
-        name: 'voice.m4a',
-      });
-
-      console.log("📤 Uploading to:", SUPABASE_URL);
-      const response = await fetch(SUPABASE_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-        },
-        body: formData,
-      });
-
-      console.log("📥 Response:", response.status, response.statusText);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ Server error:", errorText);
-        setAiStatus("SERVER ERROR");
-        Alert.alert("Server Error", `Status ${response.status}: ${errorText.substring(0, 100)}`);
-        return;
-      }
-
-      const data = await response.json();
-      console.log("✅ Data:", JSON.stringify(data));
-
-      if (data.advice) {
-        console.log("🗣️ Speaking:", data.advice);
-        setAiStatus(`ADVICE: ${data.advice}`);
-        Speech.speak(data.advice, {
-          language: 'en',
-          pitch: 1.0,
-          rate: 1.1,
+  // Start continuous recording
+  useEffect(() => {
+    const startRecording = async () => {
+      try {
+        console.log("🎙️ Starting continuous recording...");
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: true,
+          playsInSilentModeIOS: true
         });
-      } else {
-        console.warn("⚠️ No advice in response");
-        setAiStatus("NO ADVICE");
+        const { recording } = await Audio.Recording.createAsync(
+          Audio.RecordingOptionsPresets.HIGH_QUALITY
+        );
+        recordingRef.current = recording;
+        setIsRecording(true);
+        console.log("✅ Continuous recording started");
+      } catch (err) {
+        console.error("❌ Recording error:", err);
+        setAiStatus("MIC ERROR");
+      }
+    };
+
+    startRecording();
+
+    return () => {
+      if (recordingRef.current) {
+        recordingRef.current.stopAndUnloadAsync();
+      }
+    };
+  }, []);
+
+  // Countdown timer
+  useEffect(() => {
+    const countdownInterval = setInterval(() => {
+      setNextAdviceIn(prev => {
+        if (prev <= 1) {
+          return 15; // Reset to 15
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(countdownInterval);
+  }, []);
+
+  // Send audio to server every 15 seconds
+  useEffect(() => {
+    const sendAudioForAdvice = async () => {
+      if (!recordingRef.current || !isRecording) {
+        console.log("⚠️ No active recording");
+        return;
       }
 
-    } catch (error) {
-      console.error("❌ Error:", error.message || error);
-      setAiStatus("CONNECTION ERROR");
-      Alert.alert("Error", `Failed: ${error.message}`);
-    }
-  };
+      try {
+        console.log("📤 Sending audio chunk to AI advisor...");
+        setAiStatus("ANALYZING...");
 
-  const playDeescalation = () => {
-    const text = "I am recording this interaction for my safety. I am remaining silent.";
-    Speech.speak(text, { language: 'en', rate: 0.9, pitch: 1.0 });
-  };
+        // Stop current recording
+        const recording = recordingRef.current;
+        await recording.stopAndUnloadAsync();
+        const uri = recording.getURI();
 
-  const contactLawyer = () => {
-    Alert.alert("Contacting Legal Counsel", "Connecting you to the nearest available pro-bono attorney...", [
-      { text: "OK", onPress: () => console.log("Mock Lawyer Contacted") }
-    ]);
-    Vibration.vibrate([0, 500, 200, 500]);
-  };
+        // Prepare form data with audio and conversation history
+        const formData = new FormData();
+        formData.append('audio', {
+          uri: uri,
+          type: 'audio/m4a',
+          name: 'voice.m4a',
+        });
+
+        // Add conversation history as context
+        if (conversationHistory.length > 0) {
+          formData.append('context', JSON.stringify(conversationHistory));
+        }
+
+        // Send to server
+        const response = await fetch(SUPABASE_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+          },
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("❌ Server error:", errorText);
+          setAiStatus("SERVER ERROR");
+        } else {
+          const data = await response.json();
+          console.log("✅ AI Response:", data);
+
+          if (data.advice) {
+            setAiStatus(`ADVICE: ${data.advice}`);
+
+            // Speak the advice
+            Speech.speak(data.advice, {
+              language: 'en',
+              pitch: 1.0,
+              rate: 1.0,
+            });
+
+            // Update conversation history with transcript and advice
+            setConversationHistory(prev => [
+              ...prev,
+              {
+                timestamp: Date.now(),
+                transcript: data.transcript || "",
+                advice: data.advice
+              }
+            ]);
+          } else {
+            setAiStatus("AI ADVISOR ACTIVE");
+          }
+        }
+
+        // Restart recording for next interval
+        const { recording: newRecording } = await Audio.Recording.createAsync(
+          Audio.RecordingOptionsPresets.HIGH_QUALITY
+        );
+        recordingRef.current = newRecording;
+
+      } catch (error) {
+        console.error("❌ Error:", error);
+        setAiStatus("ERROR - RETRYING");
+
+        // Try to restart recording
+        try {
+          const { recording: newRecording } = await Audio.Recording.createAsync(
+            Audio.RecordingOptionsPresets.HIGH_QUALITY
+          );
+          recordingRef.current = newRecording;
+        } catch (restartErr) {
+          console.error("❌ Failed to restart recording:", restartErr);
+        }
+      }
+    };
+
+    const advisorInterval = setInterval(() => {
+      sendAudioForAdvice();
+    }, 15000); // Every 15 seconds
+
+    return () => clearInterval(advisorInterval);
+  }, [isRecording, conversationHistory]);
+
 
   const handlePinChange = (value) => {
     setPin(value);
@@ -371,35 +426,29 @@ function ActiveSessionScreen({ onEnd, recordingTime, setRecordingTime }) {
           </View>
         </View>
 
-        {/* AI HUD */}
-        <View style={styles.aiHud}>
-          <Text style={styles.visionText}>{aiVisionText}</Text>
-          <View style={styles.rightsBanner}>
-            <Text style={styles.rightsText}>{scrollingText}</Text>
+        {/* Lawyer Notification - Very top */}
+        {lawyerNotified && (
+          <View style={styles.lawyerNotificationTop}>
+            <Ionicons name="checkmark-circle" size={14} color="#FFFFFF" />
+            <Text style={styles.lawyerNotificationTopText}>Notifying the registered lawyer.</Text>
           </View>
+        )}
+
+        {/* AI Advice Banner - High on screen */}
+        <View style={styles.adviceBanner}>
+          <Text style={styles.adviceText}>{aiStatus}</Text>
+          <Text style={styles.adviceTimerText}>Next: {nextAdviceIn}s</Text>
         </View>
 
-        {/* Center AI Status */}
-        <View style={styles.aiStatusContainer}>
-          <Text style={[styles.aiStatusText, isTalking && styles.aiStatusActive]}>{aiStatus}</Text>
+        {/* Vision Analysis - Below advice */}
+        <View style={styles.visionContainer}>
+          <Text style={styles.visionText}>{aiVisionText}</Text>
         </View>
+
 
         {/* Bottom Controls */}
         <View style={styles.activeFooter}>
-          <TouchableOpacity style={styles.deescalateButton} onPress={playDeescalation}>
-            <Ionicons name="megaphone" size={24} color="black" />
-            <Text style={styles.deescalateText}>PLAY MSG</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.talkButton, isTalking && styles.talkButtonActive]}
-            onPressIn={handlePushToTalkIn}
-            onPressOut={handlePushToTalkOut}
-            activeOpacity={0.8}
-          >
-            <Ionicons name={isTalking ? "mic" : "mic-outline"} size={32} color="white" />
-            <Text style={styles.talkButtonText}>{isTalking ? "LISTENING" : "HOLD TO ASK"}</Text>
-          </TouchableOpacity>
+          <View style={{ flex: 1 }} />
 
           <View style={{ alignItems: 'center' }}>
             <TouchableOpacity style={styles.stopButton} onPress={() => { setModalVisible(true); setPin(''); }}>
@@ -407,13 +456,10 @@ function ActiveSessionScreen({ onEnd, recordingTime, setRecordingTime }) {
               <Text style={styles.stopText}>STOP</Text>
             </TouchableOpacity>
           </View>
+
+          <View style={{ flex: 1 }} />
         </View>
 
-        {/* Lawyer Button - Moved to absolute bottom right for better visibility */}
-        <TouchableOpacity style={styles.lawyerButtonFloating} onPress={contactLawyer}>
-          <Ionicons name="briefcase" size={24} color="white" />
-          <Text style={styles.lawyerButtonText}>LAWYER</Text>
-        </TouchableOpacity>
 
       </View>
 
@@ -443,39 +489,394 @@ function ActiveSessionScreen({ onEnd, recordingTime, setRecordingTime }) {
 
 // --- ONBOARDING SCREEN ---
 function OnboardingScreen({ onSave }) {
-  const [name, setName] = useState('');
-  const [status, setStatus] = useState('');
-  const [contact, setContact] = useState('');
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    dateOfBirth: '',
+    gender: '',
+    citizenshipStatus: '',
+    emergencyContactName: '',
+    emergencyContactPhone: '',
+    lawyerName: '',
+    lawyerPhone: '',
+    lawyerOrganization: '',
+    pin: '',
+    confirmPin: '',
+  });
+  const [permissions, setPermissions] = useState({
+    camera: false,
+    microphone: false,
+    contacts: false,
+    location: false,
+  });
 
-  const handleSave = () => {
-    if (!name || !status || !contact) {
-      Alert.alert('Missing Info', 'Please fill in all fields for your safety.');
+  const updateFormData = (key, value) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleNext = (requiredFields) => {
+    // Validate required fields for current step
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    if (missingFields.length > 0) {
+      Alert.alert('Missing Information', 'Please fill in all required fields.');
       return;
     }
-    onSave({ name, status, contact });
+    setCurrentStep(prev => prev + 1);
+  };
+
+  const handleSave = () => {
+    // Validate final step
+    if (!formData.emergencyContactName || !formData.emergencyContactPhone) {
+      Alert.alert('Missing Information', 'Please provide emergency contact information for your safety.');
+      return;
+    }
+
+    // Save the complete profile
+    onSave({
+      name: formData.name,
+      phone: formData.phone,
+      dateOfBirth: formData.dateOfBirth,
+      gender: formData.gender,
+      status: formData.citizenshipStatus, // Keep 'status' for backward compatibility
+      contact: formData.emergencyContactPhone, // Keep 'contact' for backward compatibility
+      emergencyContactName: formData.emergencyContactName,
+      emergencyContactPhone: formData.emergencyContactPhone,
+    });
   };
 
   return (
-    <View style={styles.screenContainer}>
-      <Text style={styles.headerTitle}>DIGITAL WITNESS</Text>
-      <Text style={styles.subTitle}>Setup Your Safety Profile</Text>
-
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>FULL NAME</Text>
-        <TextInput style={styles.input} placeholder="John Doe" placeholderTextColor="#666" value={name} onChangeText={setName} />
-      </View>
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>LEGAL STATUS (e.g., Citizen, Visa)</Text>
-        <TextInput style={styles.input} placeholder="F-1 Visa" placeholderTextColor="#666" value={status} onChangeText={setStatus} />
-      </View>
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>EMERGENCY CONTACT</Text>
-        <TextInput style={styles.input} placeholder="555-0123" keyboardType="phone-pad" placeholderTextColor="#666" value={contact} onChangeText={setContact} />
+    <View style={styles.onboardingContainer}>
+      {/* Header */}
+      <View style={styles.onboardingHeader}>
+        <Text style={styles.onboardingTitle}>Digital Witness</Text>
+        <Text style={styles.onboardingSubtitle}>Safety Profile Setup</Text>
       </View>
 
-      <TouchableOpacity style={styles.primaryButton} onPress={handleSave}>
-        <Text style={styles.buttonText}>SAVE PROFILE</Text>
-      </TouchableOpacity>
+      {/* Step Indicators */}
+      <View style={styles.stepIndicator}>
+        <View style={[styles.stepDot, currentStep >= 1 && styles.stepDotActive]}>
+          <Text style={styles.stepDotText}>1</Text>
+        </View>
+        <View style={styles.stepLine} />
+        <View style={[styles.stepDot, currentStep >= 2 && styles.stepDotActive]}>
+          <Text style={styles.stepDotText}>2</Text>
+        </View>
+        <View style={styles.stepLine} />
+        <View style={[styles.stepDot, currentStep >= 3 && styles.stepDotActive]}>
+          <Text style={styles.stepDotText}>3</Text>
+        </View>
+        <View style={styles.stepLine} />
+        <View style={[styles.stepDot, currentStep >= 4 && styles.stepDotActive]}>
+          <Text style={styles.stepDotText}>4</Text>
+        </View>
+        <View style={styles.stepLine} />
+        <View style={[styles.stepDot, currentStep >= 5 && styles.stepDotActive]}>
+          <Text style={styles.stepDotText}>5</Text>
+        </View>
+        <View style={styles.stepLine} />
+        <View style={[styles.stepDot, currentStep >= 6 && styles.stepDotActive]}>
+          <Text style={styles.stepDotText}>6</Text>
+        </View>
+      </View>
+
+      {/* Content Area */}
+      <ScrollView style={styles.onboardingContent} contentContainerStyle={styles.onboardingContentContainer}>
+        {currentStep === 1 && (
+          <View style={styles.questionnaireStep}>
+            <Text style={styles.stepTitle}>Personal Information</Text>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Full Name <Text style={styles.required}>*</Text></Text>
+              <TextInput
+                style={styles.onboardingInput}
+                placeholder="John Doe"
+                placeholderTextColor="#999"
+                value={formData.name}
+                onChangeText={(val) => updateFormData('name', val)}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Phone Number <Text style={styles.required}>*</Text></Text>
+              <TextInput
+                style={styles.onboardingInput}
+                placeholder="(555) 123-4567"
+                placeholderTextColor="#999"
+                keyboardType="phone-pad"
+                value={formData.phone}
+                onChangeText={(val) => updateFormData('phone', val)}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.nextButton}
+              onPress={() => handleNext(['name', 'phone'])}
+            >
+              <Text style={styles.nextButtonText}>Next</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {currentStep === 2 && (
+          <View style={styles.questionnaireStep}>
+            <Text style={styles.stepTitle}>Additional Details</Text>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Date of Birth <Text style={styles.required}>*</Text></Text>
+              <TextInput
+                style={styles.onboardingInput}
+                placeholder="MM/DD/YYYY"
+                placeholderTextColor="#999"
+                value={formData.dateOfBirth}
+                onChangeText={(val) => updateFormData('dateOfBirth', val)}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Gender <Text style={styles.required}>*</Text></Text>
+              <TextInput
+                style={styles.onboardingInput}
+                placeholder="Male / Female / Other"
+                placeholderTextColor="#999"
+                value={formData.gender}
+                onChangeText={(val) => updateFormData('gender', val)}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Citizenship Status <Text style={styles.required}>*</Text></Text>
+              <TextInput
+                style={styles.onboardingInput}
+                placeholder="e.g., U.S. Citizen, F-1 Visa, Green Card"
+                placeholderTextColor="#999"
+                value={formData.citizenshipStatus}
+                onChangeText={(val) => updateFormData('citizenshipStatus', val)}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.nextButton}
+              onPress={() => handleNext(['dateOfBirth', 'gender', 'citizenshipStatus'])}
+            >
+              <Text style={styles.nextButtonText}>Next</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {currentStep === 3 && (
+          <View style={styles.questionnaireStep}>
+            <Text style={styles.stepTitle}>Emergency Contact</Text>
+            <Text style={styles.stepDescription}>
+              This person will be contacted in case of an emergency.
+            </Text>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Contact Name <Text style={styles.required}>*</Text></Text>
+              <TextInput
+                style={styles.onboardingInput}
+                placeholder="Jane Doe"
+                placeholderTextColor="#999"
+                value={formData.emergencyContactName}
+                onChangeText={(val) => updateFormData('emergencyContactName', val)}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Contact Phone <Text style={styles.required}>*</Text></Text>
+              <TextInput
+                style={styles.onboardingInput}
+                placeholder="(555) 987-6543"
+                placeholderTextColor="#999"
+                keyboardType="phone-pad"
+                value={formData.emergencyContactPhone}
+                onChangeText={(val) => updateFormData('emergencyContactPhone', val)}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.nextButton}
+              onPress={() => handleNext(['emergencyContactName', 'emergencyContactPhone'])}
+            >
+              <Text style={styles.nextButtonText}>Next</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {currentStep === 4 && (
+          <View style={styles.questionnaireStep}>
+            <Text style={styles.stepTitle}>Lawyer Details</Text>
+            <Text style={styles.stepDescription}>
+              Optional: Add your attorney's information for quick access.
+            </Text>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Lawyer Name</Text>
+              <TextInput
+                style={styles.onboardingInput}
+                placeholder="John Smith, Esq."
+                placeholderTextColor="#999"
+                value={formData.lawyerName}
+                onChangeText={(val) => updateFormData('lawyerName', val)}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Lawyer Phone</Text>
+              <TextInput
+                style={styles.onboardingInput}
+                placeholder="(555) 444-3333"
+                placeholderTextColor="#999"
+                keyboardType="phone-pad"
+                value={formData.lawyerPhone}
+                onChangeText={(val) => updateFormData('lawyerPhone', val)}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Law Firm / Organization</Text>
+              <TextInput
+                style={styles.onboardingInput}
+                placeholder="Legal Aid Society"
+                placeholderTextColor="#999"
+                value={formData.lawyerOrganization}
+                onChangeText={(val) => updateFormData('lawyerOrganization', val)}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.nextButton}
+              onPress={() => setCurrentStep(5)}
+            >
+              <Text style={styles.nextButtonText}>Next</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {currentStep === 5 && (
+          <View style={styles.questionnaireStep}>
+            <Text style={styles.stepTitle}>Permissions</Text>
+            <Text style={styles.stepDescription}>
+              Grant necessary permissions for full app functionality.
+            </Text>
+
+            <TouchableOpacity
+              style={styles.permissionItem}
+              onPress={() => setPermissions(prev => ({ ...prev, camera: !prev.camera }))}
+            >
+              <View style={styles.permissionLeft}>
+                <Ionicons name="camera" size={24} color="#2196F3" />
+                <View style={styles.permissionText}>
+                  <Text style={styles.permissionTitle}>Camera</Text>
+                  <Text style={styles.permissionDesc}>Record video evidence</Text>
+                </View>
+              </View>
+              <View style={[styles.toggle, permissions.camera && styles.toggleActive]}>
+                <View style={[styles.toggleThumb, permissions.camera && styles.toggleThumbActive]} />
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.permissionItem}
+              onPress={() => setPermissions(prev => ({ ...prev, microphone: !prev.microphone }))}
+            >
+              <View style={styles.permissionLeft}>
+                <Ionicons name="mic" size={24} color="#2196F3" />
+                <View style={styles.permissionText}>
+                  <Text style={styles.permissionTitle}>Microphone</Text>
+                  <Text style={styles.permissionDesc}>Record audio and ask AI advisor</Text>
+                </View>
+              </View>
+              <View style={[styles.toggle, permissions.microphone && styles.toggleActive]}>
+                <View style={[styles.toggleThumb, permissions.microphone && styles.toggleThumbActive]} />
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.permissionItem}
+              onPress={() => setPermissions(prev => ({ ...prev, contacts: !prev.contacts }))}
+            >
+              <View style={styles.permissionLeft}>
+                <Ionicons name="call" size={24} color="#2196F3" />
+                <View style={styles.permissionText}>
+                  <Text style={styles.permissionTitle}>Calls & Messages</Text>
+                  <Text style={styles.permissionDesc}>Contact emergency contacts</Text>
+                </View>
+              </View>
+              <View style={[styles.toggle, permissions.contacts && styles.toggleActive]}>
+                <View style={[styles.toggleThumb, permissions.contacts && styles.toggleThumbActive]} />
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.permissionItem}
+              onPress={() => setPermissions(prev => ({ ...prev, location: !prev.location }))}
+            >
+              <View style={styles.permissionLeft}>
+                <Ionicons name="location" size={24} color="#2196F3" />
+                <View style={styles.permissionText}>
+                  <Text style={styles.permissionTitle}>Location</Text>
+                  <Text style={styles.permissionDesc}>Log incident location</Text>
+                </View>
+              </View>
+              <View style={[styles.toggle, permissions.location && styles.toggleActive]}>
+                <View style={[styles.toggleThumb, permissions.location && styles.toggleThumbActive]} />
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.nextButton}
+              onPress={() => setCurrentStep(6)}
+            >
+              <Text style={styles.nextButtonText}>Next</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {currentStep === 6 && (
+          <View style={styles.questionnaireStep}>
+            <Text style={styles.stepTitle}>Create a Secure PIN</Text>
+            <Text style={styles.stepDescription}>
+              Create a 4-digit PIN to stop recording sessions.
+            </Text>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Enter PIN <Text style={styles.required}>*</Text></Text>
+              <TextInput
+                style={styles.onboardingInput}
+                placeholder="••••"
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+                maxLength={4}
+                secureTextEntry
+                value={formData.pin}
+                onChangeText={(val) => updateFormData('pin', val)}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Confirm PIN <Text style={styles.required}>*</Text></Text>
+              <TextInput
+                style={styles.onboardingInput}
+                placeholder="••••"
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+                maxLength={4}
+                secureTextEntry
+                value={formData.confirmPin}
+                onChangeText={(val) => updateFormData('confirmPin', val)}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleSave}
+            >
+              <Text style={styles.saveButtonText}>Finish Setup</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -546,6 +947,11 @@ function SummaryScreen({ sessionDuration, onHome }) {
 
       <TouchableOpacity style={styles.reportButton} onPress={generateReport}>
         <Text style={styles.reportButtonText}>GENERATE INCIDENT REPORT</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.historyButton} onPress={() => Alert.alert("History", "ICE investigation, Record time 0:29, Pittsburgh, PA")}>
+        <Ionicons name="time-outline" size={20} color="#FFF" />
+        <Text style={styles.historyButtonText}>VIEW HISTORY</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.primaryButton} onPress={onHome}>
@@ -699,6 +1105,22 @@ const styles = StyleSheet.create({
   footerText: {
     color: '#444',
     fontSize: 12,
+    marginBottom: 8,
+  },
+  resetProfileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#222',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#444',
+  },
+  resetProfileText: {
+    color: '#888',
+    fontSize: 12,
+    marginLeft: 6,
   },
   // Active Session
   overlayContainer: {
@@ -786,6 +1208,30 @@ const styles = StyleSheet.create({
   aiStatusActive: {
     color: '#FF00FF',
     fontSize: 22,
+  },
+  aiTimerText: {
+    color: '#00FFFF',
+    fontSize: 14,
+    marginTop: 5,
+    textAlign: 'center',
+  },
+  lawyerNotification: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginHorizontal: 20,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+  },
+  lawyerNotificationText: {
+    color: '#4CAF50',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
   },
   activeFooter: {
     flexDirection: 'row',
@@ -949,6 +1395,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
   },
+  historyButton: {
+    backgroundColor: '#444',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#888',
+    marginTop: 10,
+    width: '100%',
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  historyButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 14,
+    marginLeft: 5,
+  },
   reportModalContent: {
     flex: 1,
     backgroundColor: '#111',
@@ -986,5 +1451,237 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: '#FFF',
     fontWeight: 'bold',
+  },
+  // Onboarding Styles
+  onboardingContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  onboardingHeader: {
+    backgroundColor: '#2196F3',
+    paddingTop: 60,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  onboardingTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 5,
+  },
+  onboardingSubtitle: {
+    fontSize: 16,
+    color: '#E3F2FD',
+  },
+  stepIndicator: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 30,
+    backgroundColor: '#FFFFFF',
+  },
+  stepDot: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E0E0E0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepDotActive: {
+    backgroundColor: '#2196F3',
+  },
+  stepDotText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  stepLine: {
+    width: 30,
+    height: 2,
+    backgroundColor: '#E0E0E0',
+  },
+  onboardingContent: {
+    flex: 1,
+  },
+  onboardingContentContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  questionnaireStep: {
+    width: '100%',
+  },
+  stepTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#212121',
+    marginBottom: 10,
+  },
+  stepDescription: {
+    fontSize: 14,
+    color: '#757575',
+    marginBottom: 20,
+  },
+  onboardingInput: {
+    backgroundColor: '#F5F5F5',
+    color: '#212121',
+    padding: 15,
+    borderRadius: 8,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  required: {
+    color: '#F44336',
+  },
+  nextButton: {
+    backgroundColor: '#2196F3',
+    paddingVertical: 16,
+    borderRadius: 8,
+    marginTop: 30,
+    alignItems: 'center',
+    shadowColor: '#2196F3',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  nextButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  saveButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 16,
+    borderRadius: 8,
+    marginTop: 30,
+    alignItems: 'center',
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  // Permission Items
+  permissionItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  permissionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  permissionText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  permissionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212121',
+    marginBottom: 2,
+  },
+  permissionDesc: {
+    fontSize: 12,
+    color: '#757575',
+  },
+  toggle: {
+    width: 50,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#BDBDBD',
+    padding: 2,
+    justifyContent: 'center',
+  },
+  toggleActive: {
+    backgroundColor: '#2196F3',
+  },
+  toggleThumb: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  toggleThumbActive: {
+    transform: [{ translateX: 22 }],
+  },
+  lawyerNotificationTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4CAF50',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginHorizontal: 10,
+    marginTop: 5,
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  lawyerNotificationTopText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  adviceBanner: {
+    backgroundColor: 'rgba(255, 0, 0, 0.6)',
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  adviceText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+    flex: 1,
+  },
+  adviceTimerText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 10,
+  },
+  visionContainer: {
+    marginTop: 10,
+    marginHorizontal: 15,
+  },
+  recordingIndicator: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 60,
+  },
+  recordingText: {
+    color: '#FF0000',
+    fontSize: 10,
+    fontWeight: 'bold',
+    marginTop: 2,
   },
 });
